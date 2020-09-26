@@ -7,9 +7,8 @@ from datetime import datetime
 def init():
   pygame.init()
   #Screen######
-  width, height = 800,  600
   global screen
-  screen = pygame.display.set_mode((width, height))
+  screen = pygame.display.set_mode(Variables.screenRect)
   #############
 
   #FUNCTIONS##################
@@ -31,9 +30,7 @@ def init():
         font = pygame.font.Font(i.text.font + ".ttf", i.text.fontSize) 
         text = font.render(i.text.text, True, i.text.fontColor, i.text.backgroundColor)
         rect = font.size((i.text.text))
-        rect = pygame.Rect(i.rect[0], i.rect[1], rect[0], rect[1])
-        rect.left = rect.left + offset[0]
-        rect.top = rect.top + offset[1]
+        rect = pygame.Rect(i.rect[0] + offset[0], i.rect[1] + offset[1], rect[0], rect[1])
         #print(rect)
         screen.blit(text, rect)
       elif(not(i.image is None)):

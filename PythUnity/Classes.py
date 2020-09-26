@@ -1,6 +1,7 @@
 from PythUnity import Variables
 import copy
 import pygame
+import types
 class Object:
   def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, enableDragOff = False):
     self.destroyed = False
@@ -71,15 +72,14 @@ class Object:
   def Copy(self):
     Throw(self)
     CopyHelp(self)
-
     parChildren = self.GetParentChildren()
     copied = copy.deepcopy(self)
-    
-    copied.index = len(parChildren) - 1
+    copied.index = len(parChildren)
     parChildren.append(copied)
     copied.Move(self.index + 1)
     CopyUnHelp(self)
     CopyUnHelp(copied)
+    CopyHelp2(copied)
     return copied
   def Destroy(self):
     Throw(self)
@@ -120,6 +120,15 @@ def CopyUnHelp(self):
     self.image = pygame.image.fromstring(self.image, self.rect.size, 'RGBA')
   for i in self.children:
     CopyUnHelp(i)
+def CopyHelp2(self):
+  for att in dir(self):
+    attObj = getattr(self, att)
+    if(att[0] != "_"):
+        attType = type(attObj)
+        if(attType is not types.MethodType and attType is not list and attType is not type(None) and attType is not Object):
+            attObj = copy.deepcopy(attObj)
+  for i in self.children:
+    CopyHelp2(i)
 def Throw(self):
   if(self.destroyed):
     raise Exception("Object was destroyed")
