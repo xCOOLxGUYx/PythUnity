@@ -1,0 +1,10 @@
+Mouse position does not update when dragging so scrolling with dragging isnt possible :(
+
+#Documentation#
+Classes.Object types instantiate with
+(rect, image, onClick = None, onDrag = None, onClickOff = None, enableDragOff = False)
+the image parameter can be a "pygame.image, color i.e (255, 0, 255), and a Classes.String"
+
+Classes.String types instatiate with (text, fontSize, font, fontColor, backgroundColor)
+an example for font would be "freesansbold"
+
