@@ -1,4 +1,4 @@
-import Variables
+from PythUnity import Variables
 import copy
 import pygame
 class Object:

@@ -1,8 +1,8 @@
 import pygame
 import copy 
-import Classes
-import Variables
-import Functions
+from PythUnity import Classes
+from PythUnity import Variables
+from PythUnity import Functions
 from datetime import datetime
 def init():
   pygame.init()

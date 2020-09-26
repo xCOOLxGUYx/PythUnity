@@ -1,4 +1,4 @@
-import Variables
+from PythUnity import Variables
 import pygame
 def AddObject(image):
   Variables.parts.append(image)
