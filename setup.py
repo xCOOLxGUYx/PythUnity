@@ -6,14 +6,13 @@ setup(
   version = '0.1',      # Start with a small number and increase it with every change you make
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'Kinda like Unity but in python',   # Give a short description about your library
-  author = 'Dylan Isaav',                   # Type in your name
+  author = 'Dylan Isaac',                   # Type in your name
   author_email = 'disuperguy@gmail.com',      # Type in your E-Mail
   url = 'https://github.com/xCOOLxGUYx/PythUnity',   # Provide either the link to your github or to your website
   download_url = 'https://github.com/xCOOLxGUYx/PythUnity/archive/v_01.tar.gz',    # I explain this later on
   keywords = ["Unity", "Python", "Pygame"],   # Keywords that define your package best
   install_requires=[            # I get to this in a second
-          'validators',
-          'beautifulsoup4',
+          'pygame"
       ],
   classifiers=[
     'Development Status :: 4 - Beta',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
