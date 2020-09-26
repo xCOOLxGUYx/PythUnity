@@ -8,9 +8,7 @@ def init():
   pygame.init()
   #Screen######
   width, height = 800,  600
-  global backgroundColor
   global screen
-  backgroundColor = 255, 255, 255
   screen = pygame.display.set_mode((width, height))
   #############
 
@@ -89,7 +87,7 @@ def init():
       elif event.type == pygame.MOUSEBUTTONUP:
         mouseDragging = False
     ##########################################
-    screen.fill(backgroundColor)
+    screen.fill(Variables.backgroundColor)
     for i in Variables.parts:
       MainFunction(i, (0, 0))
     Variables.deltaTime = (datetime.now()-startTime).total_seconds()#Set DeltaTime
