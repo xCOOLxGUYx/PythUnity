@@ -6,7 +6,7 @@ text = Important.Classes.String("TEST TEXT", 36, "freesansbold", (0, 255, 0), (0
   Important.Functions.AddObject(Important.Classes.Object(pygame.Rect(0, 0, 100, 200), text))#Prints text
 
 #Add Image#
-dvdLogo = pygame.image.load("Images/World Hunger.jpg")
+dvdLogo = pygame.image.load("IMAGE FILEPATH")
 Important.Functions.AddObject(Classes.Object(pygame.Rect(0, 0, 500, 500), dvdLogo))
 
 #Prints all fonts#
@@ -37,6 +37,3 @@ Variables.parts[0].AddComp((StartFunc, UpdateFunc))
 
 #Get All Decendants#
 Variables.parts[0].Decendants()
-
-
-#run Dylan.Test() to see examples in action
