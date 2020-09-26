@@ -4,7 +4,7 @@ import copy
 import pygame
 import types
 class Object:
-  def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, enableDragOff = False):
+  def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, enableDragOff = False):
     self.destroyed = False
     self.parent = None
     self.children = []
@@ -20,15 +20,15 @@ class Object:
     else:
       self.image = image 
       ratio = image.get_size()
-      min = ratio[0]
-      if(min > ratio[1]):
-        min = ratio[1]
-      ratio = (int(rect.width / ratio[1] * min), int(rect.height / ratio[0] * min))
+      max = ratio[0]
+      if(max < ratio[1]):
+        max = ratio[1]
+      ratio = (int(rect.width / ratio[1] * max), int(rect.height / ratio[0] * max))
       print(ratio)
       self.image = pygame.transform.scale(self.image, ratio)
     self.rect = rect
-    if onClick != None or onDrag != None:
-      self.button = Button(onClick, onDrag, onClickOff, enableDragOff)
+    if onClick != None or onDrag != None or onScroll != None:
+      self.button = Button(onClick, onDrag, onClickOff, onScroll, enableDragOff)
     else:
       self.button = None
     Functions.AddObject(self)
@@ -104,10 +104,11 @@ class Object:
     if(comp[0] != None):
         comp[0](self)
 class Button:
-  def __init__(self, onClick, onDrag, onClickOff, enableDragOff):
+  def __init__(self, onClick, onDrag, onClickOff, onScroll, enableDragOff):
     self.onClick = onClick
     self.onClickOff = onClickOff
     self.onDrag = onDrag
+    self.onScroll = onScroll
     self.dragging = False
     self.enableDragOff = enableDragOff
 class String:

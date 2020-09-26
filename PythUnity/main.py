@@ -18,8 +18,9 @@ def init():
   for i in Variables.starts:
     i()#run start
   ###VARIABLES##########
-  mousePressed = False
+  mousePressed = (False, 1)
   mouseDragging = False
+  mouseScrolling = (False, 1)
   #########################################
 
   #MAIN FUNCTION###########################
@@ -52,6 +53,9 @@ def init():
           if(i.button.onClick != None):
             i.button.onClick(i)
           i.button.dragging = True
+        elif(mouseScrolling[0] and not i.button.dragging and hovering):
+            if(i.button.onScroll != None):
+                i.button.onScroll(i, mouseScrolling[1])
         elif(i.button.dragging and (hovering or i.button.enableDragOff) and mouseDragging):
           if(i.button.onDrag != None):
             i.button.onDrag(i)
@@ -74,13 +78,30 @@ def init():
     startTime = datetime.now()#Set Start Time
     #GetMousePos##############################
     mousePressed = False
+    mouseScrolling = (False, 1)
     for event in pygame.event.get():
+      print(event)
       if event.type == pygame.MOUSEBUTTONDOWN: 
-        Variables.mousePosition = pygame.mouse.get_pos()
-        mousePressed = True;
-        mouseDragging = True
+        if event.button == 1:
+            Variables.mousePosition = pygame.mouse.get_pos()
+            mousePressed = (True, "Left");
+            mouseDragging = True
+        elif event.button == 3:
+            Variables.mousePosition = pygame.mouse.get_pos()
+            mousePressed = (True, "Right");
+            mouseDragging = True
+        elif event.button == 2:
+            Variables.mousePosition = pygame.mouse.get_pos()
+            mousePressed = (True, "Middle");
+            mouseDragging = True
+        elif event.button == 5:
+            mouseScrolling = (True, 1)
+        elif event.button == 4:
+            mouseScrolling = (True, -1)
       elif event.type == pygame.MOUSEBUTTONUP:
         mouseDragging = False
+      elif event.type == pygame.MOUSEMOTION:
+        Variables.mousePosition = event.pos
     ##########################################
     screen.fill(Variables.backgroundColor)
     for i in Variables.parts:
