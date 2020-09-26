@@ -1,4 +1,5 @@
 from PythUnity import Variables
+from PythUnity import Functions
 import copy
 import pygame
 import types
@@ -7,6 +8,7 @@ class Object:
     self.destroyed = False
     self.parent = None
     self.children = []
+    self.variables = {}
     self.image = None
     self.text = None
     self.color = None
@@ -14,7 +16,7 @@ class Object:
     if(type(image) is tuple):
       self.color = image
     elif(type(image) is String):
-      self.text = image
+      self.text = copy.deepcopy(image)
     else:
       self.image = image 
       ratio = image.get_size()
@@ -29,6 +31,12 @@ class Object:
       self.button = Button(onClick, onDrag, onClickOff, enableDragOff)
     else:
       self.button = None
+    Functions.AddObject(self)
+  #####
+  def __getitem__(self, i):
+    return self.children[i]
+  def __len__(self):
+    return len(self.children)
   #####
   def Decendants(self):
     Throw(self)
@@ -76,6 +84,7 @@ class Object:
     copied = copy.deepcopy(self)
     copied.index = len(parChildren)
     parChildren.append(copied)
+    copied.parent = self.parent
     copied.Move(self.index + 1)
     CopyUnHelp(self)
     CopyUnHelp(copied)
