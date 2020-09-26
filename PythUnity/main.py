@@ -19,8 +19,6 @@ def init():
   for i in Variables.starts:
     i()#run start
   ###VARIABLES##########
-  global mouse
-  mouse = (0, 0)
   mousePressed = False
   mouseDragging = False
   #########################################
@@ -51,7 +49,7 @@ def init():
       ########################################
       #RUN BUTTON PRESSES#####################
       if i.button != None:
-        hovering = Touching(rect, mouse)
+        hovering = Touching(rect, Variables.mousePosition)
         touching = mousePressed and hovering
         if(touching):
           if(i.button.onClick != None):
@@ -81,7 +79,7 @@ def init():
     mousePressed = False
     for event in pygame.event.get():
       if event.type == pygame.MOUSEBUTTONDOWN: 
-        mouse = pygame.mouse.get_pos()
+        Variables.mousePosition = pygame.mouse.get_pos()
         mousePressed = True;
         mouseDragging = True
       elif event.type == pygame.MOUSEBUTTONUP:
