@@ -16,7 +16,7 @@ def AddPrefab(name, obj):
   newObj = obj.Copy()
   newObj.Move(len(newObj.GetParentChildren()))
   del newObj.GetParentChildren()[newObj.index]#need to remove prefab from child list
-  newObj.parent = None
+  newObj._Object__parent = None
   newObj.index = -1
   Variables.prefabs[name] = newObj
 def GetPrefab(name):

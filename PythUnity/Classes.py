@@ -5,14 +5,14 @@ import pygame
 import types
 class Object:
   def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, enableDragOff = False, clickGroup = 0):
-    self.destroyed = False
-    self.parent = None
-    self.children = []
+    self.__destroyed = False
+    self.__parent = None
+    self.__children = []
     self.variables = {}
-    self.image = None
+    self.__image = None
     self.text = None
     self.color = None
-    self.components = []
+    self.__components = []
     self.clickGroup = clickGroup#not implemented yet
     self.velocity = (0, 0)
     if(type(image) is tuple):
@@ -20,30 +20,75 @@ class Object:
     elif(type(image) is String):
       self.text = copy.deepcopy(image)
     else:
-      self.image = image 
-      self.ImageUp()
+      self.image = image
     self.rect = rect
     if onClick != None or onDrag != None or onScroll != None:
       self.button = Button(onClick, onDrag, onClickOff, onScroll, enableDragOff)
     else:
       self.button = None
     Functions.AddObject(self)
+    for att in dir(self):
+        print(att)
+    print("////////////")
+  #####
+  @property
+  def image(self):
+    return self.__image
+  @image.setter
+  def image(self, value):
+    self.__image = value
+    ratio = self.__image.get_size()
+    max = ratio[0]
+    if(max < ratio[1]):
+        max = ratio[1]
+    ratio = (int(1000.0 * ratio[0] / max), int(1000.0 * ratio[1] / max))
+    self.__image = pygame.transform.scale(self.__image, ratio)
+  @property
+  def destroyed(self):
+    return self.__destroyed
+  @destroyed.setter
+  def destroyed(self, value):
+    Err("Cant set Object.destroyed")
+  @property
+  def parent(self):
+    return self.__parent
+  @parent.setter
+  def parent(self, value):
+    Err("Cant set Object.parent")
+  @property
+  def children(self):
+    return self.__children
+  @children.setter
+  def children(self, value):
+    Err("Cant set Object.children")
+  @property
+  def components(self):
+    return self.__components
+  @components.setter
+  def components(self, value):
+    Err("Cant set Object.components, use Object.AddComp or Object.DelComp")
   #####
   def __getitem__(self, i):
-    return self.children[i]
+    self.Throw("children.getitem")
+    return self.__children[i]
   def __len__(self):
-    return len(self.children)
+    self.Throw("children.len")
+    return len(self.__children)
   #####
   def Decendants(self):
-    Throw(self)
+    self.Throw("Object.Decendants")
     indexes = []
-    for i in self.children:
+    for i in self.__children:
       indexes.append(i)
       indexes.extend(Variables.parts[i].Decendants())
     return indexes
   def Move(self, newIndex):#components can have their update function skipped on accident if ran in another comp.update
-    Throw(self)
+    self.Throw("Object.Move")
     children = self.GetParentChildren()
+    if(newIndex < 0):
+        Err("Object.Move failed, index less than 0")
+    elif(newIndex > len(children)):
+        Warn("Object.Move incorrect, index is greater than parent.children count")
     oldIndex = self.index
     self.index = newIndex
     del children[oldIndex]
@@ -58,54 +103,60 @@ class Object:
         children[i].index = i
         i = i - 1
   def SetParent(self, newParent):
-    Throw(self)
+    self.Throw("Object.SetParent")
     children = self.GetParentChildren()
     self.Move(len(children))#make it so other children have their indexes fixed
     del children[self.index]
-    self.parent = newParent
-    self.parent.children.append(self)
-    self.index = len(self.parent.children) - 1
+    self.__parent = newParent
+    self.__parent.children.append(self)
+    self.index = len(self.__parent.children) - 1
   def GetParentChildren(self):
-    Throw(self)
+    self.Throw("Object.GetParentChildren")
     children = None
-    if(self.parent != None):
-      children = self.parent.children
+    if(self.__parent != None):
+      children = self.__parent.children
     else:
       children = Variables.parts
     return children
   def Copy(self):
-    Throw(self)
+    self.Throw("Object.Copy")
     CopyHelp(self)
     parChildren = self.GetParentChildren()
     copied = copy.deepcopy(self)
     copied.index = len(parChildren)
     parChildren.append(copied)
-    copied.parent = self.parent
+    copied.__parent = self.__parent
     copied.Move(self.index + 1)
     CopyUnHelp(self)
     CopyUnHelp(copied)
     CopyHelp2(copied)
     return copied
   def Destroy(self):
-    Throw(self)
+    self.Throw("Object.Destroy")
     children = self.GetParentChildren()
     self.Move(len(children))
     del children[self.index]
     self.index = -1 #will cause error if used incorrectly, did this on purpous
-    self.destroyed = True
-    for i in self.children:
+    self.__destroyed = True
+    for i in self.__children:
       i.Destroy()
   def AddComp(self, comp):
-    self.components.append(comp)
+    self.Throw("Object.AddComp")
+    self.__components.append(comp)
     if(comp[0] != None):
         comp[0](self)
-  def ImageUp(self):
-    ratio = self.image.get_size()
-    max = ratio[0]
-    if(max < ratio[1]):
-        max = ratio[1]
-    ratio = (int(1000.0 * ratio[0] / max), int(1000.0 * ratio[1] / max))
-    self.image = pygame.transform.scale(self.image, ratio)
+  def DelComp(self, index):
+      self.Throw("Object.DelComp")
+      if(len(self.__components) > index):
+          del self.__components[index]
+      else:
+          Err("Object.DelComp failed, index greater than comp index")
+  def Throw(self, action = ""):
+    if(self.__destroyed):
+      if(action == ""):
+        Err("Object was destroyed")
+      else:
+        Err("Object was destroyed while " + action + "() was happening")
 class Button:
   def __init__(self, onClick, onDrag, onClickOff, onScroll, enableDragOff):
     self.onClick = onClick
@@ -124,25 +175,26 @@ class String:
 
 def CopyHelp(self):
   if(self.image != None):
-    self.image = (pygame.image.tostring(self.image, 'RGBA'), self.image.get_size())
+    self._Object__image = (pygame.image.tostring(self._Object__image, 'RGBA'), self._Object__image.get_size())
   for i in self.children:
     CopyHelp(i)
 
 def CopyUnHelp(self):
-  if(self.image != None):
-    self.image = pygame.image.fromstring(self.image[0], self.image[1], 'RGBA')
+  if(self._Object__image != None):
+    self._Object__image = pygame.image.fromstring(self._Object__image[0], self._Object__image[1], 'RGBA')
   for i in self.children:
     CopyUnHelp(i)
 def CopyHelp2(self):
   for att in dir(self):
     attObj = getattr(self, att)
-    if(att[0] != "_"):
+    if(att[0] != "_" or att[1] == "O"):#if its a _Object__ atribute still copy
         attType = type(attObj)
         if(attType is not types.MethodType and attType is not list and attType is not type(None) and attType is not Object and attType is not pygame.Surface):
             attObj = copy.deepcopy(attObj)
   for i in self.children:
     CopyHelp2(i)
-def Throw(self):
-  if(self.destroyed):
-    raise Exception("Object was destroyed")
 
+def Err(text):
+    raise Exception("PythUnity: " + text)
+def Warn(text):
+    raise RuntimeWarning("PythUnity: " + text)
