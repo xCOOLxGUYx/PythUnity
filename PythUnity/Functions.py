@@ -14,9 +14,10 @@ def AddObject(image):
 
 def AddPrefab(name, obj):
   newObj = obj.Copy()
-  newObj.Destroy() #need to remove prefab from child list
-  newObj.destroyed = False #so prefab doesnt load destroyed
+  newObj.Move(len(newObj.GetParentChildren()))
+  del newObj.GetParentChildren()[newObj.index]#need to remove prefab from child list
   newObj.parent = None
+  newObj.index = -1
   Variables.prefabs[name] = newObj
 def GetPrefab(name):
   newObj = Variables.prefabs[name].Copy()

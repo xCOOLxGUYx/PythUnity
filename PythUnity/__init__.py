@@ -7,3 +7,4 @@ from PythUnity.Variables import *
 from PythUnity.main import init
 from pygame import Rect
 from pygame import image
+from pygame import font

@@ -4,7 +4,7 @@ import copy
 import pygame
 import types
 class Object:
-  def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, enableDragOff = False):
+  def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, enableDragOff = False, clickGroup = 0):
     self.destroyed = False
     self.parent = None
     self.children = []
@@ -13,19 +13,15 @@ class Object:
     self.text = None
     self.color = None
     self.components = []
+    self.clickGroup = clickGroup#not implemented yet
+    self.velocity = (0, 0)
     if(type(image) is tuple):
       self.color = image
     elif(type(image) is String):
       self.text = copy.deepcopy(image)
     else:
       self.image = image 
-      ratio = image.get_size()
-      max = ratio[0]
-      if(max < ratio[1]):
-        max = ratio[1]
-      ratio = (int(rect.width / ratio[1] * max), int(rect.height / ratio[0] * max))
-      print(ratio)
-      self.image = pygame.transform.scale(self.image, ratio)
+      self.ImageUp()
     self.rect = rect
     if onClick != None or onDrag != None or onScroll != None:
       self.button = Button(onClick, onDrag, onClickOff, onScroll, enableDragOff)
@@ -103,6 +99,13 @@ class Object:
     self.components.append(comp)
     if(comp[0] != None):
         comp[0](self)
+  def ImageUp(self):
+    ratio = self.image.get_size()
+    max = ratio[0]
+    if(max < ratio[1]):
+        max = ratio[1]
+    ratio = (int(1000.0 * ratio[0] / max), int(1000.0 * ratio[1] / max))
+    self.image = pygame.transform.scale(self.image, ratio)
 class Button:
   def __init__(self, onClick, onDrag, onClickOff, onScroll, enableDragOff):
     self.onClick = onClick
@@ -121,13 +124,13 @@ class String:
 
 def CopyHelp(self):
   if(self.image != None):
-    self.image = pygame.image.tostring(self.image, 'RGBA')
+    self.image = (pygame.image.tostring(self.image, 'RGBA'), self.image.get_size())
   for i in self.children:
     CopyHelp(i)
 
 def CopyUnHelp(self):
   if(self.image != None):
-    self.image = pygame.image.fromstring(self.image, self.rect.size, 'RGBA')
+    self.image = pygame.image.fromstring(self.image[0], self.image[1], 'RGBA')
   for i in self.children:
     CopyUnHelp(i)
 def CopyHelp2(self):
@@ -135,10 +138,11 @@ def CopyHelp2(self):
     attObj = getattr(self, att)
     if(att[0] != "_"):
         attType = type(attObj)
-        if(attType is not types.MethodType and attType is not list and attType is not type(None) and attType is not Object):
+        if(attType is not types.MethodType and attType is not list and attType is not type(None) and attType is not Object and attType is not pygame.Surface):
             attObj = copy.deepcopy(attObj)
   for i in self.children:
     CopyHelp2(i)
 def Throw(self):
   if(self.destroyed):
     raise Exception("Object was destroyed")
+
