@@ -8,13 +8,13 @@ class Object:
     self.__destroyed = False
     self.__parent = None
     self.__children = []
-    self.variables = {}
+    self.__variables = {}
     self.__image = None
-    self.text = None
-    self.color = None
+    self.__text = None
+    self.__color = None
     self.__components = []
-    self.clickGroup = clickGroup#not implemented yet
-    self.velocity = (0, 0)
+    self.__clickGroup = clickGroup#not implemented yet
+    self.__velocity = (0, 0)
     if(type(image) is tuple):
       self.color = image
     elif(type(image) is String):
@@ -23,19 +23,20 @@ class Object:
       self.image = image
     self.rect = rect
     if onClick != None or onDrag != None or onScroll != None:
-      self.button = Button(onClick, onDrag, onClickOff, onScroll, enableDragOff)
+      self.__button = Button(onClick, onDrag, onClickOff, onScroll, enableDragOff)
     else:
-      self.button = None
+      self.__button = None
     Functions.AddObject(self)
-    for att in dir(self):
-        print(att)
-    print("////////////")
+    #for att in dir(self):
+    #    print(att)
+    #print("////////////")
   #####
   @property
   def image(self):
     return self.__image
   @image.setter
   def image(self, value):
+    TypeCheck(value, pygame.Surface, "image")
     self.__image = value
     ratio = self.__image.get_size()
     max = ratio[0]
@@ -67,23 +68,65 @@ class Object:
   @components.setter
   def components(self, value):
     Err("Cant set Object.components, use Object.AddComp or Object.DelComp")
+  @property
+  def variables(self):
+    return self.__variables
+  @variables.setter
+  def variables(self, value):
+    Err("Cant set Object.variables, add each variable individualy")
+  ##
+  @property
+  def text(self):
+      return self.__text
+  @text.setter
+  def text(self, value):
+    TypeCheck(value, String, "text")
+    self.__text = value
+  @property
+  def color(self):
+      return self.__color
+  @color.setter
+  def color(self, value):
+    TypeCheck(value, tuple, "color")
+    self.__color = value
+  @property
+  def clickGroup(self):
+      return self.__clickGroup
+  @clickGroup.setter
+  def clickGroup(self, value):
+    TypeCheck(value, int, "clickGroup")
+    self.__clickGroup = value
+  @property
+  def velocity(self):
+      return self.__velocity
+  @velocity.setter
+  def velocity(self, value):
+    TypeCheck(value, tuple, "velocity")
+    self.__velocity = value
+  @property
+  def button(self):
+      return self.__button
+  @button.setter
+  def button(self, value):
+    TypeCheck(value, Button, "button")
+    self.__button = value
   #####
   def __getitem__(self, i):
-    self.Throw("children.getitem")
+    self.__Throw("children.getitem")
     return self.__children[i]
   def __len__(self):
-    self.Throw("children.len")
+    self.__Throw("children.len")
     return len(self.__children)
   #####
   def Decendants(self):
-    self.Throw("Object.Decendants")
+    self.__Throw("Object.Decendants")
     indexes = []
     for i in self.__children:
       indexes.append(i)
       indexes.extend(Variables.parts[i].Decendants())
     return indexes
   def Move(self, newIndex):#components can have their update function skipped on accident if ran in another comp.update
-    self.Throw("Object.Move")
+    self.__Throw("Object.Move")
     children = self.GetParentChildren()
     if(newIndex < 0):
         Err("Object.Move failed, index less than 0")
@@ -103,7 +146,7 @@ class Object:
         children[i].index = i
         i = i - 1
   def SetParent(self, newParent):
-    self.Throw("Object.SetParent")
+    self.__Throw("Object.SetParent")
     children = self.GetParentChildren()
     self.Move(len(children))#make it so other children have their indexes fixed
     del children[self.index]
@@ -111,7 +154,7 @@ class Object:
     self.__parent.children.append(self)
     self.index = len(self.__parent.children) - 1
   def GetParentChildren(self):
-    self.Throw("Object.GetParentChildren")
+    self.__Throw("Object.GetParentChildren")
     children = None
     if(self.__parent != None):
       children = self.__parent.children
@@ -119,7 +162,7 @@ class Object:
       children = Variables.parts
     return children
   def Copy(self):
-    self.Throw("Object.Copy")
+    self.__Throw("Object.Copy")
     CopyHelp(self)
     parChildren = self.GetParentChildren()
     copied = copy.deepcopy(self)
@@ -132,7 +175,7 @@ class Object:
     CopyHelp2(copied)
     return copied
   def Destroy(self):
-    self.Throw("Object.Destroy")
+    self.__Throw("Object.Destroy")
     children = self.GetParentChildren()
     self.Move(len(children))
     del children[self.index]
@@ -141,17 +184,17 @@ class Object:
     for i in self.__children:
       i.Destroy()
   def AddComp(self, comp):
-    self.Throw("Object.AddComp")
+    self.__Throw("Object.AddComp")
     self.__components.append(comp)
     if(comp[0] != None):
         comp[0](self)
   def DelComp(self, index):
-      self.Throw("Object.DelComp")
+      self.__Throw("Object.DelComp")
       if(len(self.__components) > index):
           del self.__components[index]
       else:
           Err("Object.DelComp failed, index greater than comp index")
-  def Throw(self, action = ""):
+  def __Throw(self, action = ""):
     if(self.__destroyed):
       if(action == ""):
         Err("Object was destroyed")
@@ -167,12 +210,51 @@ class Button:
     self.enableDragOff = enableDragOff
 class String:
   def __init__(self, text, fontSize, font, fontColor, backgroundColor):
+    self.__fontSize = None
+    self.__text = None
+    self.__font = None
+    self.__fontColor = None
+    self.__backgroundColor = None
     self.fontSize = fontSize
     self.text = text
     self.font = font
     self.fontColor = fontColor
     self.backgroundColor = backgroundColor
-
+  @property
+  def fontSize(self):
+    return self.__fontSize
+  @fontSize.setter
+  def fontSize(self, value):
+    TypeCheck(value, int, "fontSize", "String")
+    self.__fontSize = value
+  @property
+  def text(self):
+    return self.__text
+  @text.setter
+  def text(self, value):
+    TypeCheck(value, str, "text", "String")
+    self.__text = value
+  @property
+  def font(self):
+    return self.__font
+  @font.setter
+  def font(self, value):
+    TypeCheck(value, str, "font", "String")
+    self.__font = value
+  @property
+  def fontColor(self):
+    return self.__fontColor
+  @fontColor.setter
+  def fontColor(self, value):
+    TypeCheck(value, [tuple, type(None)], "fontColor", "String")
+    self.__fontColor = value
+  @property
+  def backgroundColor(self):
+    return self.__backgroundColor
+  @backgroundColor.setter
+  def backgroundColor(self, value):
+    TypeCheck(value, [tuple, type(None)], "backgroundColor", "String")
+    self.__backgroundColor = value
 def CopyHelp(self):
   if(self.image != None):
     self._Object__image = (pygame.image.tostring(self._Object__image, 'RGBA'), self._Object__image.get_size())
@@ -198,3 +280,25 @@ def Err(text):
     raise Exception("PythUnity: " + text)
 def Warn(text):
     raise RuntimeWarning("PythUnity: " + text)
+
+def TypeCheck(value, typeInput, name, className = "Object"):
+    correct = False
+    outString = ""
+    if(type(typeInput) == list):
+      for i in typeInput:
+          if(type(value) == i):
+              correct = True
+              break
+          else:
+              if(outString == ""):
+                outString = TypeStringClean(str(i))
+              else:
+                outString = outString + " or " + TypeStringClean(str(i))
+    else:
+      correct = type(value) == typeInput
+      outString = TypeStringClean(str(typeInput))
+    if(not correct):
+        Err("cant set PythUnity." + className + "." + name + " as a " + str(type(value)) + " it must be a " + outString)
+def TypeStringClean(inputStr):
+    inputStr = inputStr.replace("pygame", "PythUnity")
+    return inputStr
