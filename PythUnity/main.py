@@ -9,16 +9,16 @@ def init():
   pygame.init()
   #Screen######
   global screen
-  screen = pygame.display.set_mode(Variables.screenRect)
+  screen = pygame.display.set_mode(Variables.var.screenRect)
   #############
 
   #FUNCTIONS##################
   def Touching(rect, pos):
     return rect.left+rect.width > pos[0] > rect.left and rect.top+rect.height > pos[1] > rect.top
   ############################
-  for i in Variables.starts:
+  for i in Variables.var.starts:
     i()#run start
-  ###VARIABLES##########
+  ###Variables.var##########
   mousePressed = (False, "")
   mouseScrolling = (False, 0)
   mouseUp = ""
@@ -60,7 +60,7 @@ def init():
           raise ValueError("Object has invalid color can be in formats: RGB and RGBA, or as ()")
       ########################################
       #RUN BUTTON PRESSES#####################
-      hovering = Touching(rect, Variables.mousePosition)
+      hovering = Touching(rect, Variables.var.mousePosition)
       if(hovering):
         clicked.insert(0, i)
       if i.button != None:
@@ -68,17 +68,17 @@ def init():
         if(touching):
           if(i.button.onClick != None):
             i.button.onClick(i, mousePressed[1])
-          i.button.dragging = True
+          i.button._Button__dragging = True
         elif(mouseScrolling[0] and not i.button.dragging and hovering):
             if(i.button.onScroll != None):
                 i.button.onScroll(i, mouseScrolling[1])
-        elif(i.button.dragging and (hovering or i.button.enableDragOff) and Variables.mouseDragging):
+        elif(i.button.dragging and (hovering or i.button.enableDragOff) and Variables.var.mouseDragging):
           if(i.button.onDrag != None):
             i.button.onDrag(i)
-        elif((not hovering and not i.button.enableDragOff) or not Variables.mouseDragging):
+        elif((not hovering and not i.button.enableDragOff) or not Variables.var.mouseDragging):
           if(i.button.onClickOff != None and i.button.dragging == True):
             i.button.onClickOff(i, mouseUp)
-          i.button.dragging = False
+          i.button._Button__dragging = False
       ########################################
 
       #RUN COMPONENT Updates#########################
@@ -87,8 +87,8 @@ def init():
           iComp[1](i)
       for iChild in i.children:
         MainFunction(iChild, (rect.left, rect.top))
-      i.rect.left = i.rect.left + i.velocity[0] * Variables.deltaTime
-      i.rect.top = i.rect.top + i.velocity[1] * Variables.deltaTime
+      i.rect.left = i.rect.left + i.velocity[0] * Variables.var.deltaTime
+      i.rect.top = i.rect.top + i.velocity[1] * Variables.var.deltaTime
       ########################################
   #########################################
 
@@ -101,17 +101,17 @@ def init():
     for event in pygame.event.get():
       if event.type == pygame.MOUSEBUTTONDOWN: 
         if event.button == 1:
-            Variables.mousePosition = pygame.mouse.get_pos()
+            Variables.var._Var__mousePosition = pygame.mouse.get_pos()
             mousePressed = (True, "Left")
-            Variables.mouseDragging = True
+            Variables.var._Var__mouseDragging = True
         elif event.button == 3:
-            Variables.mousePosition = pygame.mouse.get_pos()
+            Variables.var._Var__mousePosition = pygame.mouse.get_pos()
             mousePressed = (True, "Right")
-            Variables.mouseDragging = True
+            Variables.var._Var__mouseDragging = True
         elif event.button == 2:
-            Variables.mousePosition = pygame.mouse.get_pos()
+            Variables.var._Var__mousePosition = pygame.mouse.get_pos()
             mousePressed = (True, "Middle")
-            Variables.mouseDragging = True
+            Variables.var._Var__mouseDragging = True
         elif event.button == 5:
             mouseScrolling = (True, mouseScrolling[1] + 1)
         elif event.button == 4:
@@ -123,14 +123,14 @@ def init():
             mouseUp = "Right"
         elif event.button == 2:
             mouseUp = "Middle"
-        Variables.mouseDragging = False
+        Variables.var._Var__mouseDragging = False
       elif event.type == pygame.MOUSEMOTION:
-        Variables.oldMousePosition = Variables.mousePosition
-        Variables.mousePosition = event.pos
+        Variables.var._Var__oldMousePosition = Variables.var.mousePosition
+        Variables.var._Var__mousePosition = event.pos
     ##########################################
-    screen.fill(Variables.backgroundColor)
-    for i in Variables.parts:
+    screen.fill(Variables.var.backgroundColor)
+    for i in Variables.var.parts:
       MainFunction(i, (0, 0))
-    Variables.deltaTime = (datetime.now()-startTime).total_seconds()#Set DeltaTime
+    Variables.var._Var__deltaTime = (datetime.now()-startTime).total_seconds()#Set DeltaTime
     pygame.display.flip()
   #################

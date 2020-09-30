@@ -15,6 +15,7 @@ class Object:
     self.__components = []
     self.__clickGroup = clickGroup#not implemented yet
     self.__velocity = (0, 0)
+    self.__index = None
     if(type(image) is tuple):
       self.color = image
     elif(type(image) is String):
@@ -36,7 +37,7 @@ class Object:
     return self.__image
   @image.setter
   def image(self, value):
-    TypeCheck(value, pygame.Surface, "image")
+    Functions.TypeCheck(value, pygame.Surface, "image")
     self.__image = value
     ratio = self.__image.get_size()
     max = ratio[0]
@@ -49,66 +50,72 @@ class Object:
     return self.__destroyed
   @destroyed.setter
   def destroyed(self, value):
-    Err("Cant set Object.destroyed")
+    Functions.Err("Cant set Object.destroyed")
+  @property
+  def index(self):
+    return self.__index
+  @index.setter
+  def index(self, value):
+    Functions.Err("Cant set Object.index")
   @property
   def parent(self):
     return self.__parent
   @parent.setter
   def parent(self, value):
-    Err("Cant set Object.parent")
+    Functions.Err("Cant set Object.parent")
   @property
   def children(self):
     return self.__children
   @children.setter
   def children(self, value):
-    Err("Cant set Object.children")
+    Functions.Err("Cant set Object.children")
   @property
   def components(self):
     return self.__components
   @components.setter
   def components(self, value):
-    Err("Cant set Object.components, use Object.AddComp or Object.DelComp")
+    Functions.Err("Cant set Object.components, use Object.AddComp or Object.DelComp")
   @property
   def variables(self):
     return self.__variables
   @variables.setter
   def variables(self, value):
-    Err("Cant set Object.variables, add each variable individualy")
+    Functions.Err("Cant set Object.variables, add each variable individualy")
   ##
   @property
   def text(self):
       return self.__text
   @text.setter
   def text(self, value):
-    TypeCheck(value, String, "text")
+    Functions.TypeCheck(value, [String, type(None)], "text")
     self.__text = value
   @property
   def color(self):
       return self.__color
   @color.setter
   def color(self, value):
-    TypeCheck(value, tuple, "color")
+    Functions.TypeCheck(value, [tuple, type(None)], "color")
     self.__color = value
   @property
   def clickGroup(self):
       return self.__clickGroup
   @clickGroup.setter
   def clickGroup(self, value):
-    TypeCheck(value, int, "clickGroup")
+    Functions.TypeCheck(value, int, "clickGroup")
     self.__clickGroup = value
   @property
   def velocity(self):
       return self.__velocity
   @velocity.setter
   def velocity(self, value):
-    TypeCheck(value, tuple, "velocity")
+    Functions.TypeCheck(value, tuple, "velocity")
     self.__velocity = value
   @property
   def button(self):
       return self.__button
   @button.setter
   def button(self, value):
-    TypeCheck(value, Button, "button")
+    Functions.TypeCheck(value, [Button, type(None)], "button")
     self.__button = value
   #####
   def __getitem__(self, i):
@@ -123,27 +130,27 @@ class Object:
     indexes = []
     for i in self.__children:
       indexes.append(i)
-      indexes.extend(Variables.parts[i].Decendants())
+      indexes.extend(Variables.var.parts[i].Decendants())
     return indexes
   def Move(self, newIndex):#components can have their update function skipped on accident if ran in another comp.update
     self.__Throw("Object.Move")
     children = self.GetParentChildren()
     if(newIndex < 0):
-        Err("Object.Move failed, index less than 0")
+        Functions.Err("Object.Move failed, index less than 0")
     elif(newIndex > len(children)):
-        Warn("Object.Move incorrect, index is greater than parent.children count")
+        Functions.Warn("Object.Move incorrect, index is greater than parent.children count")
     oldIndex = self.index
-    self.index = newIndex
+    self.__index = newIndex
     del children[oldIndex]
     children.insert(newIndex, self)
     i = oldIndex
     if(newIndex > oldIndex):
       while(i < newIndex):
-        children[i].index = i
+        children[i]._Object__index = i
         i = i + 1
     elif(newIndex < oldIndex):
       while(i >= newIndex):
-        children[i].index = i
+        children[i]._Object__index = i
         i = i - 1
   def SetParent(self, newParent):
     self.__Throw("Object.SetParent")
@@ -152,21 +159,21 @@ class Object:
     del children[self.index]
     self.__parent = newParent
     self.__parent.children.append(self)
-    self.index = len(self.__parent.children) - 1
+    self.__index = len(self.__parent.children) - 1
   def GetParentChildren(self):
     self.__Throw("Object.GetParentChildren")
     children = None
     if(self.__parent != None):
       children = self.__parent.children
     else:
-      children = Variables.parts
+      children = Variables.var.parts
     return children
   def Copy(self):
     self.__Throw("Object.Copy")
     CopyHelp(self)
     parChildren = self.GetParentChildren()
     copied = copy.deepcopy(self)
-    copied.index = len(parChildren)
+    copied._Object__index = len(parChildren)
     parChildren.append(copied)
     copied.__parent = self.__parent
     copied.Move(self.index + 1)
@@ -179,7 +186,7 @@ class Object:
     children = self.GetParentChildren()
     self.Move(len(children))
     del children[self.index]
-    self.index = -1 #will cause error if used incorrectly, did this on purpous
+    self.__index = -1 #will cause Functions.Error if used incorrectly, did this on purpous
     self.__destroyed = True
     for i in self.__children:
       i.Destroy()
@@ -193,21 +200,67 @@ class Object:
       if(len(self.__components) > index):
           del self.__components[index]
       else:
-          Err("Object.DelComp failed, index greater than comp index")
+          Functions.Err("Object.DelComp failed, index greater than comp index")
   def __Throw(self, action = ""):
     if(self.__destroyed):
       if(action == ""):
-        Err("Object was destroyed")
+        Functions.Err("Object was destroyed")
       else:
-        Err("Object was destroyed while " + action + "() was happening")
+        Functions.Err("Object was destroyed while " + action + "() was happening")
 class Button:
   def __init__(self, onClick, onDrag, onClickOff, onScroll, enableDragOff):
+    self.__onClick = None
+    self.__onClickOff = None
+    self.__onDrag = None
+    self.__onScroll = None
+    self.__dragging = False
+    self.__enableDragOff = False
     self.onClick = onClick
     self.onClickOff = onClickOff
     self.onDrag = onDrag
     self.onScroll = onScroll
-    self.dragging = False
-    self.enableDragOff = enableDragOff
+  @property
+  def dragging(self):
+      return self.__dragging
+  @dragging.setter
+  def dragging(self, value):
+      Functions.Err("You cant set PythUnity.Button.dragging, you can only get it")
+  ##
+  @property
+  def enableDragOff(self):
+      return self.__enableDragOff
+  @enableDragOff.setter
+  def enableDragOff(self, value):
+      Functions.TypeCheck(value, bool, "enableDragOff", "Button")
+      self.__enableDragOff = value
+  @property
+  def onClick(self):
+      return self.__onClick
+  @onClick.setter
+  def onClick(self, value):
+      Functions.TypeCheck(value, [types.FunctionType, type(None)], "onClick", "Button")
+      self.__onClick = value
+  @property
+  def onClickOff(self):
+      return self.__onClickOff
+  @onClickOff.setter
+  def onClickOff(self, value):
+      Functions.TypeCheck(value, [types.FunctionType, type(None)], "onClickOff", "Button")
+      self.__onClickOff = value
+  @property
+  def onDrag(self):
+      return self.__onDrag
+  @onDrag.setter
+  def onDrag(self, value):
+      Functions.TypeCheck(value, [types.FunctionType, type(None)], "onDrag", "Button")
+      self.__onDrag = value
+  @property
+  def onScroll(self):
+      return self.__onScroll
+  @onScroll.setter
+  def onScroll(self, value):
+      Functions.TypeCheck(value, [types.FunctionType, type(None)], "onScroll", "Button")
+      self.__onScroll = value
 class String:
   def __init__(self, text, fontSize, font, fontColor, backgroundColor):
     self.__fontSize = None
@@ -225,35 +278,35 @@ class String:
     return self.__fontSize
   @fontSize.setter
   def fontSize(self, value):
-    TypeCheck(value, int, "fontSize", "String")
+    Functions.TypeCheck(value, int, "fontSize", "String")
     self.__fontSize = value
   @property
   def text(self):
     return self.__text
   @text.setter
   def text(self, value):
-    TypeCheck(value, str, "text", "String")
+    Functions.TypeCheck(value, str, "text", "String")
     self.__text = value
   @property
   def font(self):
     return self.__font
   @font.setter
   def font(self, value):
-    TypeCheck(value, str, "font", "String")
+    Functions.TypeCheck(value, str, "font", "String")
     self.__font = value
   @property
   def fontColor(self):
     return self.__fontColor
   @fontColor.setter
   def fontColor(self, value):
-    TypeCheck(value, [tuple, type(None)], "fontColor", "String")
+    Functions.TypeCheck(value, [tuple, type(None)], "fontColor", "String")
     self.__fontColor = value
   @property
   def backgroundColor(self):
     return self.__backgroundColor
   @backgroundColor.setter
   def backgroundColor(self, value):
-    TypeCheck(value, [tuple, type(None)], "backgroundColor", "String")
+    Functions.TypeCheck(value, [tuple, type(None)], "backgroundColor", "String")
     self.__backgroundColor = value
 def CopyHelp(self):
   if(self.image != None):
@@ -276,29 +329,3 @@ def CopyHelp2(self):
   for i in self.children:
     CopyHelp2(i)
 
-def Err(text):
-    raise Exception("PythUnity: " + text)
-def Warn(text):
-    raise RuntimeWarning("PythUnity: " + text)
-
-def TypeCheck(value, typeInput, name, className = "Object"):
-    correct = False
-    outString = ""
-    if(type(typeInput) == list):
-      for i in typeInput:
-          if(type(value) == i):
-              correct = True
-              break
-          else:
-              if(outString == ""):
-                outString = TypeStringClean(str(i))
-              else:
-                outString = outString + " or " + TypeStringClean(str(i))
-    else:
-      correct = type(value) == typeInput
-      outString = TypeStringClean(str(typeInput))
-    if(not correct):
-        Err("cant set PythUnity." + className + "." + name + " as a " + str(type(value)) + " it must be a " + outString)
-def TypeStringClean(inputStr):
-    inputStr = inputStr.replace("pygame", "PythUnity")
-    return inputStr

@@ -23,8 +23,11 @@ def options(array):
             option(i, array[2][i])
     if(len(array[2]) != 0):
         user = input("Type the number choice or press {ENTER} to go back: ")
-        while(user != "" and not RepresentsInt(user)):
-           print("incorrect format")
+        while(user != "" and (not RepresentsInt(user) or int(user) >= len(array[2]))):
+           if(not RepresentsInt(user)):
+             print("incorrect format")
+           else:
+             print("option out of range")
            user = input("Type the number choice or press {ENTER} to go back: ")
         if(user != ""):
           cls()
