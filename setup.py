@@ -9,7 +9,7 @@ setup(
   author = 'Dylan Isaac',                   # Type in your name
   author_email = 'disuperguy@gmail.com',      # Type in your E-Mail
   url = 'https://github.com/xCOOLxGUYx/PythUnity',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/xCOOLxGUYx/PythUnity/archive/v_07_2.tar.gz',    # I explain this later on
+  download_url = 'https://github.com/xCOOLxGUYx/PythUnity/archive/v_07_2_FIXED.tar.gz',    # I explain this later on
   keywords = ["Unity", "Python", "Pygame"],   # Keywords that define your package best
   install_requires=[            # I get to this in a second
           "pygame",
