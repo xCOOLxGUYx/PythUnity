@@ -69,7 +69,6 @@ def init():
         if(touching):
           if(i.button.onClick != None):
             type = 0
-            i.button._Button__dragging = True
         elif(mouseScrolling[0] and not i.button.dragging and hovering):
           if(i.button.onScroll != None):
             type = 1
@@ -79,9 +78,8 @@ def init():
         elif((not hovering and not i.button.enableDragOff) or not Variables.var.mouseDragging):
           if(i.button.onClickOff != None and i.button.dragging == True):
             type = 3
-          i.button._Button__dragging = False
-        if(type != None or hovering):
-          clicked.insert(0, (i, type))
+      if(type != None or hovering):
+        clicked.insert(0, (i, type))
       ########################################
       for iChild in i.children:
         MainFunction(iChild, (rect.left, rect.top))
@@ -142,22 +140,28 @@ def init():
     group = None
     for i in clicked:
       if(not i[0].destroyed):
-        if(group == None or group == i[0].clickGroup):
+        #print(i[0].index)
+        if(group == None or group == i[0].clickGroup or (i[1] == 3 and i[0].button._Button__dragging and i[0].button.enableDragOff)):
           group = i[0].clickGroup
           if(i[1] == 0):
+            i[0].button._Button__dragging = True
             i[0].button.onClick(i[0], mousePressed[1])
           elif(i[1] == 1):
             i[0].button.onScroll(i[0], mouseScrolling[1])
           elif(i[1] == 2):
             i[0].button.onDrag(i[0])
           elif(i[1] == 3):
-            i[0].button.onClickOff(i[0], mouseUp)
-        else:
-          if(i[0].button.dragging and i.button.enableDragOff):
-            i[0].button.onDrag(i[0])
-          elif(i[0].button.dragging):
             i[0].button._Button__dragging = False
             i[0].button.onClickOff(i[0], mouseUp)
+        else:
+          if(i[0].button != None):
+              if(i[0].button.dragging and i[0].button.enableDragOff):
+                if(i[0].button.onDrag != None):
+                  i[0].button.onDrag(i[0])
+              elif(i[0].button.dragging and not i[0].button.enableDragOff):
+                i[0].button._Button__dragging = False
+                if(i[0].button.onClickOff != None):
+                  i[0].button.onClickOff(i[0], "Blocked")
     ########################################
     for i in Variables.var.parts:
       Update(i)

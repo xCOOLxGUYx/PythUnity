@@ -240,7 +240,8 @@ class Button:
     self.__onDrag = None
     self.__onScroll = None
     self.__dragging = False
-    self.__enableDragOff = False
+    self.__enableDragOff = None
+    self.enableDragOff = enableDragOff
     self.onClick = onClick
     self.onClickOff = onClickOff
     self.onDrag = onDrag
