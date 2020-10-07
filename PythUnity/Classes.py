@@ -16,11 +16,12 @@ class Object:
     self.__text = None
     self.__color = None
     self.__components = []
-    self.__clickGroup = clickGroup#not implemented yet
+    self.__clickGroup = None
     self.__velocity = (0, 0)
     self.__index = None
     self.__rect = None
     self.rect = rect
+    self.clickGroup = clickGroup
     if(type(image) is tuple):
       self.color = image
     elif(type(image) is String):
@@ -222,6 +223,10 @@ class Object:
           del self.__components[index]
       else:
           Functions.Err("Object.DelComp failed, index greater than comp index")
+  def SetClickGroup(self, number):
+      self.clickGroup = number
+      for i in self.children:
+          SetClickGroup(i)
   def __Throw(self, action = ""):
     if(self.__destroyed):
       if(action == ""):

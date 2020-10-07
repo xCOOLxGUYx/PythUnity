@@ -27,6 +27,8 @@ def AddPrefab(name, obj):
 def GetPrefab(name):
   if(type(name) is not str):
       Err("Name value must be a " + str(str) + " not a " + str(type(name)))
+  if(name not in Variables.var.prefabs):
+      Err("Prefab: \"" + name + "\" does not exist")
   newObj = Variables.var.prefabs[name].Copy()
   newObj.Move(len(newObj.GetParentChildren()))
   return newObj

@@ -60,39 +60,44 @@ def init():
         rect.left = rect.left + offset[0]
         rect.top = rect.top + offset[1]
       ########################################
-      #RUN BUTTON PRESSES#####################
+      #GET BUTTON PRESSES#####################
       hovering = Touching(rect, Variables.var.mousePosition)
-      if(hovering):
-        clicked.insert(0, i)
-      if i.button != None:
+      global clicked
+      type = None
+      if(i.button != None):
         touching = mousePressed[0] and hovering
         if(touching):
           if(i.button.onClick != None):
-            i.button.onClick(i, mousePressed[1])
-          i.button._Button__dragging = True
+            type = 0
+            i.button._Button__dragging = True
         elif(mouseScrolling[0] and not i.button.dragging and hovering):
-            if(i.button.onScroll != None):
-                i.button.onScroll(i, mouseScrolling[1])
+          if(i.button.onScroll != None):
+            type = 1
         elif(i.button.dragging and (hovering or i.button.enableDragOff) and Variables.var.mouseDragging):
           if(i.button.onDrag != None):
-            i.button.onDrag(i)
+            type = 2
         elif((not hovering and not i.button.enableDragOff) or not Variables.var.mouseDragging):
           if(i.button.onClickOff != None and i.button.dragging == True):
-            i.button.onClickOff(i, mouseUp)
+            type = 3
           i.button._Button__dragging = False
+        if(type != None or hovering):
+          clicked.insert(0, (i, type))
       ########################################
-
-      #RUN COMPONENT Updates#########################
-      for iComp in i.components:
-        if(iComp[1] != None):
-          iComp[1](i)
       for iChild in i.children:
         MainFunction(iChild, (rect.left, rect.top))
       i.rect.left = i.rect.left + i.velocity[0] * Variables.var.deltaTime
       i.rect.top = i.rect.top + i.velocity[1] * Variables.var.deltaTime
       ########################################
   #########################################
-
+  def Update(i):
+      if(not i.destroyed):
+        for iComp in i.components:
+          if(i.destroyed):
+            break
+          if(iComp[1] != None):
+            iComp[1](i)
+        for iChild in i.children:
+          Update(iChild)
   while True:
     startTime = datetime.now()#Set Start Time
     #GetMousePos##############################
@@ -130,8 +135,32 @@ def init():
         Variables.var._Var__mousePosition = event.pos
     ##########################################
     screen.fill(Variables.var.backgroundColor)
+    clicked = []
     for i in Variables.var.parts:
       MainFunction(i, (0, 0))
+    #RUN BUTTON PRESSES#####################
+    group = None
+    for i in clicked:
+      if(not i[0].destroyed):
+        if(group == None or group == i[0].clickGroup):
+          group = i[0].clickGroup
+          if(i[1] == 0):
+            i[0].button.onClick(i[0], mousePressed[1])
+          elif(i[1] == 1):
+            i[0].button.onScroll(i[0], mouseScrolling[1])
+          elif(i[1] == 2):
+            i[0].button.onDrag(i[0])
+          elif(i[1] == 3):
+            i[0].button.onClickOff(i[0], mouseUp)
+        else:
+          if(i[0].button.dragging and i.button.enableDragOff):
+            i[0].button.onDrag(i[0])
+          elif(i[0].button.dragging):
+            i[0].button._Button__dragging = False
+            i[0].button.onClickOff(i[0], mouseUp)
+    ########################################
+    for i in Variables.var.parts:
+      Update(i)
     Variables.var._Var__deltaTime = (datetime.now()-startTime).total_seconds()#Set DeltaTime
     pygame.display.flip()
   #################
