@@ -78,10 +78,11 @@ def help():
                 ("parent", "returns the parent of the object, if the object doesnt have a parent it will return None", []),
                 ("variables", "a dictionary where components store their variables", []),
                 ("image", "if you created an Object with an image it will show here", []),
+                ("transformedImage", "will return the image variable after scale and color are applied to it", []),
                 ("text", "if you created an Object with text it will show here", []),
                 ("color", "if you created an Object with a color it will show here", []),
                 ("components", "shows a list of all of your Objects components", []),
-                ("clickGroup", "an int that allows you to set the clickGroup of the Object, \nobjects in the same clickGroup wont block eachoher from being clicked\nuseful if you have an image over a button and you dont want the button to get blocked by the image", []),
+                ("clickGroup", "an int that allows you to set the clickGroup of the Object, \nobjects in the same clickGroup wont block eachoher from being clicked\nuseful if you have an image over a button and you dont want the button to get blocked by the image\n(Not Applied Yet)", []),
                 ("velocity", "a tuple for the x and y speed of an object, represented as (x, y)", []),
                 ("button", "hold information on the onClick and OnDrag etc of the Object, it is a PythUnity.Button type, \nif you didnt add any button functions this value will be set to None", [
                     ("Methods", "", [
@@ -92,8 +93,9 @@ def help():
                     ("Variables", "", [
                         ("enableDragOff", "its the same as the enableDragOff in the Object parameters", []),
                         ("dragging", "says if the Object is currently being dragged", [])])])])]),
-        ("Prefabs", "", [
-            ("Prefabs", "", [])])])
+        ("Prefabs", "A prefab is a blueprint to create an object", [
+            ("AddPrefab", "you can use PythUnity.AddPrefab(\"name\", part) \nto create a prefab from a part and store it at the name string\nheres an example: \npart = PythUnity.Object(PythUnity.Rect(0, 0, 100, 100), (255, 0, 0))\nPythUnity.AddPrefab(\"Square\", part)", []),
+            ("GetPrefab", "you can use PythUnity.GetPrefab(\"name\") \nto create a part from a prefab that is stored at the name string\nheres an example: \npart = PythUnity.GetPrefab(\"Square\")", [])])])
     while(True):
       cls()
       if(options(array)):

@@ -1,4 +1,5 @@
 from PythUnity import Variables
+import PythUnity
 import pygame
 def AddObject(image):
   Variables.var.parts.append(image)
@@ -13,6 +14,10 @@ def AddObject(image):
 #  return indexes
 
 def AddPrefab(name, obj):
+  if(type(name) is not str):
+      Err("Name value must be a " + str(str) + " not a " + str(type(name)))
+  if(type(obj) is not PythUnity.Classes.Object):
+      Err("Object value must be a " + str(PythUnity.Classes.Object) + " not a " + str(type(obj)))
   newObj = obj.Copy()
   newObj.Move(len(newObj.GetParentChildren()))
   del newObj.GetParentChildren()[newObj.index]#need to remove prefab from child list
@@ -20,6 +25,8 @@ def AddPrefab(name, obj):
   newObj._Object__index = -1
   Variables.var.prefabs[name] = newObj
 def GetPrefab(name):
+  if(type(name) is not str):
+      Err("Name value must be a " + str(str) + " not a " + str(type(name)))
   newObj = Variables.var.prefabs[name].Copy()
   newObj.Move(len(newObj.GetParentChildren()))
   return newObj

@@ -34,30 +34,31 @@ def init():
         font = pygame.font.Font(i.text.font + ".ttf", i.text.fontSize) 
         text = font.render(i.text.text, True, i.text.fontColor, i.text.backgroundColor)
         rect = font.size((i.text.text))
-        rect = pygame.Rect(i.rect[0] + offset[0], i.rect[1] + offset[1], rect[0], rect[1])
+        rect = pygame.Rect(i.rect.left + offset[0], i.rect.top + offset[1], rect[0], rect[1])
         #print(rect)
         screen.blit(text, rect)
       elif(not(i.image is None)):
-        rect = copy.deepcopy(i.rect)
+        rect = i.rect.Copy()
         rect.left = rect.left + offset[0]
         rect.top = rect.top + offset[1]
-        ratio = i.image.get_size()
-        ratio = (int(ratio[0] / 1000.0 * rect.width), int(ratio[1] / 1000.0 * rect.height))
-        image = pygame.transform.scale(i.image, ratio)
-        screen.blit(image, rect)
-      else:
-        rect = copy.deepcopy(i.rect)
+        screen.blit(i._Object__transformedImage, rect.ToPygameRect())
+      elif(not(i.color is None)):
+        rect = i.rect.Copy()
         rect.left = rect.left + offset[0]
         rect.top = rect.top + offset[1]
         if(len(i.color) == 3):
-          pygame.draw.rect(screen, i.color, rect)
+          pygame.draw.rect(screen, i.color, rect.ToPygameRect())
         elif(len(i.color) == 4):
-          s = pygame.Surface((i.rect.width, i.rect.height))
+          s = pygame.Surface((rect.width, rect.height))
           s.set_alpha(i.color[3])
           s.fill((i.color[0], i.color[1], i.color[2]))
-          screen.blit(s, (i.rect.left, i.rect.top))
+          screen.blit(s, (rect.left, rect.top))
         elif(len(i.color) != 0):
           raise ValueError("Object has invalid color can be in formats: RGB and RGBA, or as ()")
+      else:
+        rect = i.rect.Copy()
+        rect.left = rect.left + offset[0]
+        rect.top = rect.top + offset[1]
       ########################################
       #RUN BUTTON PRESSES#####################
       hovering = Touching(rect, Variables.var.mousePosition)
