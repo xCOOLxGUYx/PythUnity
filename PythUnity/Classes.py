@@ -3,7 +3,6 @@ from PythUnity import Functions
 import copy
 import pygame
 import types
-import numpy as np
 import inspect
 class Object:
   def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, onHover = None, onHoverOff = None, onHoverOn = None, enableDragOff = False, clickGroup = 0):
