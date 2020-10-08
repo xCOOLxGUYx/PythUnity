@@ -63,22 +63,27 @@ def init():
       #GET BUTTON PRESSES#####################
       hovering = Touching(rect, Variables.var.mousePosition)
       global clicked
-      type = None
+      type = []
       if(i.button != None):
         touching = mousePressed[0] and hovering
         if(touching):
-          if(i.button.onClick != None):
-            type = 0
+          type = [0]
         elif(mouseScrolling[0] and not i.button.dragging and hovering):
           if(i.button.onScroll != None):
-            type = 1
+            type = [1]
         elif(i.button.dragging and (hovering or i.button.enableDragOff) and Variables.var.mouseDragging):
           if(i.button.onDrag != None):
-            type = 2
+            type = [2]
         elif((not hovering and not i.button.enableDragOff) or not Variables.var.mouseDragging):
-          if(i.button.onClickOff != None and i.button.dragging == True):
-            type = 3
-      if(type != None or hovering):
+          if(i.button.dragging == True):
+            type = [3]
+        if(hovering):
+          type.append(4)
+        elif(not hovering and i.button._Button__hovering):
+          i.button._Button__hovering = False
+          if(i.button.onHoverOff != None):
+            type.append(5)
+      if(len(type) != 0 or hovering):
         clicked.insert(0, (i, type))
       ########################################
       for iChild in i.children:
@@ -141,27 +146,51 @@ def init():
     for i in clicked:
       if(not i[0].destroyed):
         #print(i[0].index)
-        if(group == None or group == i[0].clickGroup or (i[1] == 3 and i[0].button._Button__dragging and i[0].button.enableDragOff)):
+        if(group == None or group == i[0].clickGroup):
           group = i[0].clickGroup
-          if(i[1] == 0):
-            i[0].button._Button__dragging = True
-            i[0].button.onClick(i[0], mousePressed[1])
-          elif(i[1] == 1):
-            i[0].button.onScroll(i[0], mouseScrolling[1])
-          elif(i[1] == 2):
-            i[0].button.onDrag(i[0])
-          elif(i[1] == 3):
-            i[0].button._Button__dragging = False
-            i[0].button.onClickOff(i[0], mouseUp)
+          for type in i[1]:
+            if(type == 0):
+              i[0].button._Button__dragging = True
+              if(i[0].button.onClick != None):
+                i[0].button.onClick(i[0], mousePressed[1])
+            elif(type == 1):
+              i[0].button.onScroll(i[0], mouseScrolling[1])
+            elif(type == 2):
+              i[0].button.onDrag(i[0])
+            elif(type == 3):   
+              i[0].button._Button__dragging = False
+              if(i[0].button.onClickOff != None):
+                upButton = mouseUp
+                if(upButton == ""):
+                    upButton = "Off"
+                i[0].button.onClickOff(i[0], upButton)
+            elif(type == 4):
+              if(not i[0].button.hovering):
+                i[0].button._Button__hovering = True
+                if(i[0].button.onHoverOn != None):
+                  i[0].button.onHoverOn(i[0])
+              else:
+                if(i[0].button.onHover != None):
+                  i[0].button.onHover(i[0])
+            elif(type == 5):
+              i[0].button.onHoverOff(i[0], "Off")
         else:
           if(i[0].button != None):
-              if(i[0].button.dragging and i[0].button.enableDragOff):
+              if(3 in i[1] and i[0].button._Button__dragging and i[0].button.enableDragOff):
+                i[0].button._Button__dragging = False
+                if(i[0].button.onClickOff != None):
+                  i[0].button.onClickOff(i[0], mouseUp)
+              elif(i[0].button.dragging and i[0].button.enableDragOff):
                 if(i[0].button.onDrag != None):
                   i[0].button.onDrag(i[0])
               elif(i[0].button.dragging and not i[0].button.enableDragOff):
                 i[0].button._Button__dragging = False
                 if(i[0].button.onClickOff != None):
-                  i[0].button.onClickOff(i[0], "Blocked")
+                  i[0].button.onClickOff(i[0], "Blocked")         
+              if(i[0].button.hovering):
+                i[0].button._Button__hovering = False
+                if(i[0].button.onHoverOff != None):
+                  i[0].button.onHoverOff(i[0], "Blocked")
     ########################################
     for i in Variables.var.parts:
       Update(i)

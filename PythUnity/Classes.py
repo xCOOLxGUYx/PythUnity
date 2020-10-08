@@ -6,7 +6,7 @@ import types
 import numba as nb
 import numpy as np
 class Object:
-  def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, enableDragOff = False, clickGroup = 0):
+  def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, onHover = None, onHoverOff = None, onHoverOn = None, enableDragOff = False, clickGroup = 0):
     self.__destroyed = False
     self.__parent = None
     self.__children = []
@@ -29,7 +29,7 @@ class Object:
     elif(type(image) is pygame.Surface):
       self.image = image
     if onClick != None or onDrag != None or onScroll != None:
-      self.__button = Button(onClick, onDrag, onClickOff, onScroll, enableDragOff)
+      self.__button = Button(onClick, onDrag, onClickOff, onScroll, onHover, onHoverOff, onHoverOn, enableDragOff)
     else:
       self.__button = None
     Functions.AddObject(self)
@@ -234,24 +234,37 @@ class Object:
       else:
         Functions.Err("Object was destroyed while " + action + "() was happening")
 class Button:
-  def __init__(self, onClick, onDrag, onClickOff, onScroll, enableDragOff):
+  def __init__(self, onClick = None, onDrag = None, onClickOff = None, onScroll = None, onHover = None, onHoverOff = None, onHoverOn = None, enableDragOff = None):
     self.__onClick = None
     self.__onClickOff = None
     self.__onDrag = None
     self.__onScroll = None
+    self.__onHover = None
+    self.__onHoverOff = None
+    self.__onHoverOn = None
     self.__dragging = False
+    self.__hovering = False
     self.__enableDragOff = None
     self.enableDragOff = enableDragOff
     self.onClick = onClick
     self.onClickOff = onClickOff
     self.onDrag = onDrag
     self.onScroll = onScroll
+    self.onHover = onHover
+    self.onHoverOff = onHoverOff
+    self.onHoverOn = onHoverOn
   @property
   def dragging(self):
       return self.__dragging
   @dragging.setter
   def dragging(self, value):
       Functions.Err("You cant set PythUnity.Button.dragging, you can only get it")
+  @property
+  def hovering(self):
+      return self.__hovering
+  @hovering.setter
+  def hovering(self, value):
+      Functions.Err("You cant set PythUnity.Button.hovering, you can only get it")
   ##
   @property
   def enableDragOff(self):
@@ -288,6 +301,27 @@ class Button:
   def onScroll(self, value):
       Functions.TypeCheck(value, [types.FunctionType, type(None)], "onScroll", "Button")
       self.__onScroll = value
+  @property
+  def onHover(self):
+      return self.__onHover
+  @onHover.setter
+  def onHover(self, value):
+      Functions.TypeCheck(value, [types.FunctionType, type(None)], "onHover", "Button")
+      self.__onHover = value
+  @property
+  def onHoverOff(self):
+      return self.__onHoverOff
+  @onHoverOff.setter
+  def onHoverOff(self, value):
+      Functions.TypeCheck(value, [types.FunctionType, type(None)], "onHoverOff", "Button")
+      self.__onHoverOff = value
+  @property
+  def onHoverOn(self):
+      return self.__onHoverOn
+  @onHoverOn.setter
+  def onHoverOn(self, value):
+      Functions.TypeCheck(value, [types.FunctionType, type(None)], "onHoverOn", "Button")
+      self.__onHoverOn = value
 class String:
   def __init__(self, text, fontSize, font, fontColor, backgroundColor):
     self.__fontSize = None

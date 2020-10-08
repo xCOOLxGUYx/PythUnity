@@ -1,6 +1,7 @@
 from PythUnity.Classes import Object
 from PythUnity.Classes import String
 from PythUnity.Classes import Rect
+from PythUnity.Classes import Button
 from PythUnity.Functions import AddPrefab
 from PythUnity.Functions import GetPrefab
 from PythUnity.Functions import PrintFonts

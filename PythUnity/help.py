@@ -9,6 +9,8 @@ def RepresentsInt(s):
 def cls():os.system('cls' if os.name=='nt' else 'clear')
 def border():
   print("///////////////////////////")
+def smallBorder():
+  print("//////////")
 def option(number, text):
   print(str(number) + ". " + text)
 def options(array):
@@ -16,11 +18,13 @@ def options(array):
     if(len(array) >= 2):
       print(array[0] + ": ")
       print(array[1])
+    smallBorder()
     for i in range(len(array[2])):
         if(type(array[2][i]) == tuple):
             option(i, array[2][i][0])
         else:
             option(i, array[2][i])
+    smallBorder()
     if(len(array[2]) != 0):
         user = input("Type the number choice or press {ENTER} to go back: ")
         while(user != "" and (not RepresentsInt(user) or int(user) >= len(array[2]))):
@@ -47,22 +51,38 @@ cls()
 print("Run PythUnity.help() for help")
 border()
 def help():
-    array = ("Help Options", "", [
+    array = ("Help Options", "This is the help menu!\ntype the number of one of the options below for more information\nnote: going in order is recommended", [
         ("Startup", "to start up its very simple\nheres an example of a startup:\n\nimport PythUnity\n#PythUnity.help()\ndef Start():\n   print(\"started\")\nPythUnity.starts.append(Start)\nPythUnity.init()\n\nAnd thats all you have to do, \nyou can put whatever you want before PythUnity.init() runs but after you run PythUnity.init() the rest of your code wont run,\nso you'll have to use buttons and components to get what you need done, \nas you go throught this help section you'll learn how to do so", []),
-        ("Creating Objects", "You can create GameObjects just like in Unity! by using PythUnity.Object(), choose one of the options too learn more\nnote: going in order is recommended", [
+        ("Creating Objects", "You can create GameObjects just like in Unity! by using PythUnity.Object(), choose one of the options too learn more", [
             ("Creating Rectangles", "to create a rectange you must do PythUnity.Object(transform, color) \nthe transform parameter is an instance of the PythUnity.Rect() value, \ninstantiating the Rect values looks like this PythUnity.Rect(dist_from_left, dist_from_top, width, height)\n\nThe color parameter is a tuple ie. (255, 255, 255) or (255, 255, 255, 50) for semi transparency\nthe two formats you can use are RGB and RGBA", []), 
             ("Creating Images", "if you dont know how to make a rectange I would recommend going back\nmaking an image is alot like making a rectange\nthe difference is instead of using a color you do a PythUnity.Surface\nan example is PythUnity.Object(transform, PythUnity.image(image_path_string))\nthe code above will make an object with an image from that filepath", []), 
             ("Creating Text", "Creating text takes more space but is just as easy as the others, select one of the options to learn more", [
                 ("Format", "the format for creating text looks like this:\nPythUnity.Object(transform, PythUnity.String(message, font_size, font, font_color, background_color))", []),
                 ("PythUnity.String", "this is the type that stores data on how the text is displayed on the screen", []),
             ("Example", "this will create a highlighted text saying hi: \ntext = PythUnity.String(\"hi\", 24, \"freesansbold\", (255, 255, 0), (0, 255, 255))\nPythUnity.Object(PythUnity.Rect(280, 150, 100, 200), text)", [])]),
-            ("Creating Buttons", "when instantiating the Object class there are additional parameters that allow you to make buttons\n these additional parameters are Object(onClick, onDrag, onClickOff, onScroll, enableDragOff, clickGroup)",[
+            ("Creating Buttons", "when instantiating the Object class there are additional parameters that allow you to make buttons\n these additional parameters are: \nObject(onClick, onDrag, onClickOff, onScroll, onHover, onHoverOff, onHoverOn, enableDragOff, clickGroup)",[
+                ("Button Type, PythUnity.Button", "this is the class type of Object.button\nto instatiate this type do:\nPythUnity.Button(onClick, onDrag, onClickOff, onScroll, onHover, onHoverOff, onHoverOn, enableDragOff)\nheres an example:\ndef Click(self, button):\n    print(\"clicked with button \" + button)\nbutton = PythUnity.Button(Click)", [
+                    ("Variables", "all the variables", [
+                        ("hovering", "returns true if mouse is hovering over object, good for knowing if the onHover() function is running", []),
+                        ("dragging", "returns true if object is being dragged, good for knowing if the onDrag() function is running", []),
+                        ("enableDragOff", "is a boolean, if enabled if your mouse stops hovering over the object while your dragging \nit will still run the onDrag() function till you let go", [])]),
+                    ("Methods", "A list of methods that you can set, more method info in the \"Creating Buttons\" section", [
+                        ("onClick", "takes arguments (object_ran_on, string_button_name)\nnote: if button was blocked this will run with string_button_name as \"Blocked\" and if the mouse stops hovering over the button it will run with string_button_name as \"Off\"", []),
+                        ("onDrag", "takes arguments (object_ran_on)", []),
+                        ("onClickOff", "takes arguments (object_ran_on, string_button_name)\nif blocked, string_button_name=\"Blocked\"\nif fell off, string_button_name=\"Off\"\nif let go, string_button_name=MOUSE_BUTTON_NAME", []),
+                        ("onScroll", "takes arguments (object_ran_on, int_direction)\nup: int_direction = 1\ndown: int_direction = -1", []),
+                        ("onHover", "takes arguments (object_ran_on)", []),
+                        ("onHoverOn", "takes arguments (object_ran_on)", []),
+                        ("onHoverOff", "takes arguments (object_ran_on, reason)\nif blocked, reason=\"Blocked\"\nif fell off, reason=\"Off\"", [])])]),
                 ("Object.button.onClick", "is a method, whenever you click the object this function will run", []),
                 ("Object.button.onDrag", "is a method, whenever you hold the mouse button on the object this function will run", []),
                 ("Object.button.onClickOff", "is a method, whenever you click off the object this function will run", []),
                 ("Object.button.onScroll", "is a method, whenever you use the scroll button while hovering over the Object this will run", []),
+                ("Object.button.onHover", "is a method, whenever your mouse is over the button it will run", []),
+                ("Object.button.onHoverOff", "is a method, whenever your mouse stops hovering it will run", []),
+                ("Object.button.onHoverOn", "is a method, whenever your mouse starts hovering over an object it will run", []),
                 ("Object.button.enableDragOff", "is a boolean, if enabled if your mouse stops hovering over the object while your dragging \nit will still run the drag funciton till you let go", []),
-                ("Object.clickGroup", "talked about in later module", [])])]),
+                ("Object.clickGroup", "talked about in \"Object Variables\" section", [])])]),
         ("Object Methods", "Objects come with many built in tools, some you will need to know, some will be useful to know\nHeres a list of all the functions, its recommended to go in order", [
             ("Object.Move(index)", "this function moves the object around the layer\nimagine you have a stack of papers and you move the 56th page down to the 30th page, thats what .Move does, it moves the page to the index'th page", []),
             ("Object.SetParent(target)", "this function sets the parent of an object to another\nimagine you have a russian doll and you put another doll into it, thats what .SetParent does, \nit takes the doll out of one doll and then puts it into another, and in this case the other doll is the target variable", []),
@@ -96,7 +116,17 @@ def help():
                     ("dragging", "says if the Object is currently being dragged", [])])])]),
         ("Prefabs", "A prefab is a blueprint to create an object", [
             ("AddPrefab", "you can use PythUnity.AddPrefab(\"name\", part) \nto create a prefab from a part and store it at the name string\nheres an example: \npart = PythUnity.Object(PythUnity.Rect(0, 0, 100, 100), (255, 0, 0))\nPythUnity.AddPrefab(\"Square\", part)", []),
-            ("GetPrefab", "you can use PythUnity.GetPrefab(\"name\") \nto create a part from a prefab that is stored at the name string\nheres an example: \npart = PythUnity.GetPrefab(\"Square\")", [])])])
+            ("GetPrefab", "you can use PythUnity.GetPrefab(\"name\") \nto create a part from a prefab that is stored at the name string\nheres an example: \npart = PythUnity.GetPrefab(\"Square\")", [])]),
+        ("Global Variables", "Global Variables are variables that PythUnity uses\nYou can access global variables with \"PythUnity.v\" for example \"PythUnity.v.deltaTime\"\nbelow are all the variables", [
+            ("deltaTime", "a float value of the amount of seconds between each render", []),
+            ("parts", "an array of all the Objects that are not parented", []),
+            ("prefabs", "a dictionary of all the Prefabs that have been made", []),
+            ("starts", "an array used to define which functions you want PythUnity to run at the beggining", []),
+            ("backgroundColor", "a 3 length tuple that represents a RGB format color for the background of the window", []),
+            ("mousePosition", "a 2 length tuple representing the xy coordiantes of the mouse in the window", []),
+            ("oldMousePosition", "a 2 length tuple representing the last xy coordiantes of the mouse in the window", []),
+            ("screenRect", "a 2 length tuple representing (width, height) of the window\nnote: you have to set this before calling PythUnity.init()", []),
+            ("mouseDragging", "a bool saying whether or not the mouse is being held down", [])])])
     while(True):
       cls()
       if(options(array)):
