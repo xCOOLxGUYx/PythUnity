@@ -3,8 +3,8 @@ from PythUnity import Functions
 import copy
 import pygame
 import types
-import numba as nb
 import numpy as np
+import inspect
 class Object:
   def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, onHover = None, onHoverOff = None, onHoverOn = None, enableDragOff = False, clickGroup = 0):
     self.__destroyed = False
@@ -33,9 +33,6 @@ class Object:
     else:
       self.__button = None
     Functions.AddObject(self)
-    #for att in dir(self):
-    #    print(att)
-    #print("////////////")
   #####
   @property
   def rect(self):
@@ -52,7 +49,7 @@ class Object:
   @image.setter
   def image(self, value):
     Functions.TypeCheck(value, pygame.Surface, "image")
-    self.__image = value
+    self.__image = value.convert_alpha()
     TransformImage(self, changeColor=True)
   @property
   def destroyed(self):
@@ -110,6 +107,18 @@ class Object:
   @color.setter
   def color(self, value):
     Functions.TypeCheck(value, [tuple, type(None)], "color")
+    if(value == None):
+      self.__color = None
+    temp = []
+    max = -1
+    for i in value:
+      if(i > max):
+        max = i
+      temp.append(i)
+    value = temp
+    if(max > 255):
+      for i in range(len(value)):
+        value[i] = value[i] / max * 255
     if(value == None or len(value) == 4):
         self.__color = (float(value[0]), float(value[1]), float(value[2]), float(value[3]))
     elif(len(value) == 3):
@@ -151,7 +160,7 @@ class Object:
     indexes = []
     for i in self.__children:
       indexes.append(i)
-      indexes.extend(Variables.var.parts[i].Decendants())
+      indexes.extend(i.Decendants())
     return indexes
   def Move(self, newIndex):#components can have their update function skipped on accident if ran in another comp.update
     self.__Throw("Object.Move")
@@ -224,6 +233,7 @@ class Object:
       else:
           Functions.Err("Object.DelComp failed, index greater than comp index")
   def SetClickGroup(self, number):
+      self.__Throw("Object.SetClickGroup")
       self.clickGroup = number
       for i in self.children:
           SetClickGroup(i)
@@ -245,7 +255,8 @@ class Button:
     self.__dragging = False
     self.__hovering = False
     self.__enableDragOff = None
-    self.enableDragOff = enableDragOff
+    if(enableDragOff != None):
+      self.enableDragOff = enableDragOff
     self.onClick = onClick
     self.onClickOff = onClickOff
     self.onDrag = onDrag
@@ -279,6 +290,7 @@ class Button:
   @onClick.setter
   def onClick(self, value):
       Functions.TypeCheck(value, [types.FunctionType, type(None)], "onClick", "Button")
+      TestFuncLen(value, "onClick", ["self", "string_mouseButton"])
       self.__onClick = value
   @property
   def onClickOff(self):
@@ -286,6 +298,7 @@ class Button:
   @onClickOff.setter
   def onClickOff(self, value):
       Functions.TypeCheck(value, [types.FunctionType, type(None)], "onClickOff", "Button")
+      TestFuncLen(value, "onClickOff", ["self", "string_mouseButton"])
       self.__onClickOff = value
   @property
   def onDrag(self):
@@ -293,6 +306,7 @@ class Button:
   @onDrag.setter
   def onDrag(self, value):
       Functions.TypeCheck(value, [types.FunctionType, type(None)], "onDrag", "Button")
+      TestFuncLen(value, "onDrag")
       self.__onDrag = value
   @property
   def onScroll(self):
@@ -300,6 +314,7 @@ class Button:
   @onScroll.setter
   def onScroll(self, value):
       Functions.TypeCheck(value, [types.FunctionType, type(None)], "onScroll", "Button")
+      TestFuncLen(value, "onScroll", ["self", "int_direction"])
       self.__onScroll = value
   @property
   def onHover(self):
@@ -307,6 +322,7 @@ class Button:
   @onHover.setter
   def onHover(self, value):
       Functions.TypeCheck(value, [types.FunctionType, type(None)], "onHover", "Button")
+      TestFuncLen(value, "onHover")
       self.__onHover = value
   @property
   def onHoverOff(self):
@@ -314,6 +330,7 @@ class Button:
   @onHoverOff.setter
   def onHoverOff(self, value):
       Functions.TypeCheck(value, [types.FunctionType, type(None)], "onHoverOff", "Button")
+      TestFuncLen(value, "onHoverOff", ["self", "string_reason"])
       self.__onHoverOff = value
   @property
   def onHoverOn(self):
@@ -321,6 +338,7 @@ class Button:
   @onHoverOn.setter
   def onHoverOn(self, value):
       Functions.TypeCheck(value, [types.FunctionType, type(None)], "onHoverOn", "Button")
+      TestFuncLen(value, "onHoverOn")
       self.__onHoverOn = value
 class String:
   def __init__(self, text, fontSize, font, fontColor, backgroundColor):
@@ -431,7 +449,11 @@ class Rect: #need to use @property so cant use pygame.rect
         return pygame.Rect(self.left, self.top, self.width, self.height)
     def Copy(self):
         return Rect(self.left, self.top, self.width, self.height)
-
+def TestFuncLen(func, name, neededArgs = ["self"], className="Button"):
+    if(func != None):
+        length = len(inspect.getargspec(func)[0])
+        if(length != len(neededArgs)):
+            Functions.Err("PythUnity." + className + "." + name + " must have an argument length of " + str(len(neededArgs)) + " not " + str(length) + "\nfunction: " + str(func)  + "\nneeded arguments: " + str(neededArgs) + "\nrecieved arguments: " + str(inspect.getargspec(func)[0]))
 def RectItemHelp(self, i):
   options = ["left", "top", "width", "height"]
   if(type(i) is not int):
@@ -472,14 +494,12 @@ def TransformImage(self, changeColor = False):
   if(self.image != None):
       ratio = self.image.get_size()
       if(type(self.color) is not type(None) and changeColor):
-          #self._Object__transformedImage = pygame.Surface((ratio[0], ratio[1]))
-          #print("a " + str(ratio[0]*ratio[1]))
-          #array = MultColor(np.array(self.color), pygame.PixelArray(self.image), self.image, self.image.get_size())
-          #print("z")
-          #pygame.surfarray.blit_array(self._Object__transformedImage, array)
-          #print("z2")
-          #commented section too slow so replaced it till later
-          self._Object__transformedImage = self.image
+          color = self.color
+          if(color == None):
+              color = (255, 255, 255, 255)
+          self._Object__transformedImage = pygame.Surface(size=ratio)
+          self._Object__transformedImage.blit(self.image, (0, 0))
+          self._Object__transformedImage.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
       elif(type(self.color) is type(None)):
           self._Object__transformedImage = self.image
       ratio = self.image.get_size()
@@ -491,14 +511,3 @@ def TransformImage(self, changeColor = False):
       self._Object__transformedImage = pygame.transform.scale(self._Object__transformedImage, ratio)
   else:
     self._Object__transformedImage = None
-@nb.jit(forceobj=True)
-def MultColor(color, array, image, rect):
-  multColor = (color[0]/255, color[1]/255, color[2]/255, color[3]/255)
-  width = rect[0]
-  height = rect[1]
-  arr = np.empty((width, height), dtype=float)
-  for x in nb.prange(width):
-    for y in nb.prange(height):
-       newColor = image.unmap_rgb(array[x, y])
-       arr[x, y] = image.map_rgb((newColor[0] * multColor[0], newColor[1] * multColor[1], newColor[2] * multColor[2], newColor[3] * multColor[3]))
-  return arr
