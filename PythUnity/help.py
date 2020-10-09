@@ -57,7 +57,8 @@ def help():
             ("Creating Rectangles", "to create a rectange you must do PythUnity.Object(transform, color) \nthe transform parameter is an instance of the PythUnity.Rect() value, \ninstantiating the Rect values looks like this PythUnity.Rect(dist_from_left, dist_from_top, width, height)\n\nThe color parameter is a tuple ie. (255, 255, 255) or (255, 255, 255, 50) for semi transparency\nthe two formats you can use are RGB and RGBA", []), 
             ("Creating Images", "if you dont know how to make a rectange I would recommend going back\nmaking an image is alot like making a rectange\nthe difference is instead of using a color you do a PythUnity.Surface\nan example is PythUnity.Object(transform, PythUnity.image(image_path_string))\nthe code above will make an object with an image from that filepath", [
                 ("Image Coloring", "you can change the color of images\nfor example take the example we just saw and add \n.color = (50, 255, 50)\nto turn the image green\n\nimage = PythUnity.Object(PythUnity.Rect(0, 0, 500, 500), PythUnity.image(\"image.jpg\"))\nimage.color = (50, 255, 50)", []),
-                ("PythUnity.Surface & PythUnity.image", "PythUnity.Surface and PythUnity.image are the same as pygame.Surface and pygame.image, \nso for documentation go to https://www.pygame.org/docs/", []),]), 
+                ("PythUnity.Surface & PythUnity.image", "PythUnity.Surface and PythUnity.image are the same as pygame.Surface and pygame.image, \nso for documentation go to https://www.pygame.org/docs/\nNote: PythUnity.imag.load is different from pygame.image.load because PythUnity.image.load supports transparency", [
+                    ("PythUnity.image.load", "its the same as pygame.image.load except that it sets the colorKey too support PNG transparency\nfor example: \nPythunity.image.load(\"Image.png\", colorKey=(255, 0, 0))\n\nthis will make the color red transparent, by default the colorKey is set to (255, 0, 255)", [])]),]), 
             ("Creating Text", "Creating text takes more space but is just as easy as the others, select one of the options to learn more", [
                 ("Format", "the format for creating text looks like this:\nPythUnity.Object(transform, PythUnity.String(message, font_size, font, font_color, background_color))", []),
                 ("PythUnity.String", "this is the type that stores data on how the text is displayed on the screen", []),
@@ -96,7 +97,7 @@ def help():
             ("Object.Decendants()", "this will get all the children of the object your running it on, \naswell as the children of those children and so on and so on", []), 
             ("Object.SetClickGroup(new_click_group)", "this will set the clickGroup variable of all the objects that are a decendant of the object it was run on", [])]),
        ("Object Variables", "the Object class also comes with variables", [
-            ("children", "an array of all the children an Object has", []),
+            ("children", "an array of all the children an Object has\nas a shortcut you can do PythUnity.Object[i] instead of PythUnity.Object.children[i]", []),
             ("destroyed", "says whether an Object is destroyed or not", []),
             ("parent", "returns the parent of the object, if the object doesnt have a parent it will return None", []),
             ("variables", "a dictionary where components store their variables", []),

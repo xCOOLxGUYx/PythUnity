@@ -108,22 +108,23 @@ class Object:
     Functions.TypeCheck(value, [tuple, type(None)], "color")
     if(value == None):
       self.__color = None
-    temp = []
-    max = -1
-    for i in value:
-      if(i > max):
-        max = i
-      temp.append(i)
-    value = temp
-    if(max > 255):
-      for i in range(len(value)):
-        value[i] = value[i] / max * 255
-    if(value == None or len(value) == 4):
-        self.__color = (float(value[0]), float(value[1]), float(value[2]), float(value[3]))
-    elif(len(value) == 3):
-        self.__color = (float(value[0]), float(value[1]), float(value[2]), 255.0)
     else:
-        Functions.Err("Object.color must have a length of 3 or 4 in RGBA or RGB format")
+      temp = []
+      max = -1
+      for i in value:
+        if(i > max):
+          max = i
+        temp.append(i)
+      value = temp
+      if(max > 255):
+        for i in range(len(value)):
+          value[i] = value[i] / max * 255
+      if(value == None or len(value) == 4):
+          self.__color = (float(value[0]), float(value[1]), float(value[2]), float(value[3]))
+      elif(len(value) == 3):
+          self.__color = (float(value[0]), float(value[1]), float(value[2]), 255.0)
+      else:
+          Functions.Err("Object.color must have a length of 3 or 4 in RGBA or RGB format")
     TransformImage(self, changeColor=True)
   @property
   def clickGroup(self):
@@ -405,8 +406,6 @@ class Rect: #need to use @property so cant use pygame.rect
     def left(self, value):
       Functions.TypeCheck(value, [float, int], "left", "Rect")
       self.__left = int(value)
-      if(self.__owner != None):
-        TransformImage(self.__owner)
     @property
     def top(self):
         return self.__top
@@ -414,8 +413,6 @@ class Rect: #need to use @property so cant use pygame.rect
     def top(self, value):
       Functions.TypeCheck(value, [float, int], "top", "Rect")
       self.__top = int(value)
-      if(self.__owner != None):
-        TransformImage(self.__owner)
     @property
     def width(self):
         return self.__width
@@ -496,9 +493,11 @@ def TransformImage(self, changeColor = False):
           color = self.color
           if(color == None):
               color = (255, 255, 255, 255)
-          self._Object__transformedImage = pygame.Surface(size=ratio)
-          self._Object__transformedImage.blit(self.image, (0, 0))
-          self._Object__transformedImage.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
+          self._Object__transformedImage = self.image.copy()
+          image2 = pygame.Surface(size=self._Object__transformedImage.get_size()).convert_alpha() 
+          image2.fill(color)
+          image2.blit(self._Object__transformedImage.convert_alpha(), (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+          self._Object__transformedImage = image2
       elif(type(self.color) is type(None)):
           self._Object__transformedImage = self.image
       ratio = self.image.get_size()
