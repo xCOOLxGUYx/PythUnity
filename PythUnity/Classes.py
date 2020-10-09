@@ -236,7 +236,7 @@ class Object:
       self.__Throw("Object.SetClickGroup")
       self.clickGroup = number
       for i in self.children:
-          SetClickGroup(i)
+          i.SetClickGroup(number)
   def __Throw(self, action = ""):
     if(self.__destroyed):
       if(action == ""):
@@ -387,7 +387,9 @@ class String:
   def backgroundColor(self, value):
     Functions.TypeCheck(value, [tuple, type(None)], "backgroundColor", "String")
     self.__backgroundColor = value
-
+  #######
+  def GetSize(self):
+    return pygame.font.Font(self.font + ".ttf", self.fontSize).size(self.text)
 class Rect: #need to use @property so cant use pygame.rect
     def __init__(self, left, top, width, height):
         self.__owner = None

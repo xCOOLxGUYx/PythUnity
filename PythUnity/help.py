@@ -61,7 +61,9 @@ def help():
                     ("PythUnity.image.load", "its the same as pygame.image.load except that it sets the colorKey too support PNG transparency\nfor example: \nPythunity.image.load(\"Image.png\", colorKey=(255, 0, 0))\n\nthis will make the color red transparent, by default the colorKey is set to (255, 0, 255)", [])]),]), 
             ("Creating Text", "Creating text takes more space but is just as easy as the others, select one of the options to learn more", [
                 ("Format", "the format for creating text looks like this:\nPythUnity.Object(transform, PythUnity.String(message, font_size, font, font_color, background_color))", []),
-                ("PythUnity.String", "this is the type that stores data on how the text is displayed on the screen", []),
+                ("PythUnity.String", "this is the type that stores data on how the text is displayed on the screen", [
+                    ("Methods", "", [
+                        ("PythUnity.String.GetSize()", "gets the amount of pixels it takes up", [])])]),
             ("Example", "this will create a highlighted text saying hi: \ntext = PythUnity.String(\"hi\", 24, \"freesansbold\", (255, 255, 0), (0, 255, 255))\nPythUnity.Object(PythUnity.Rect(280, 150, 100, 200), text)", [])]),
             ("Creating Buttons", "when instantiating the Object class there are additional parameters that allow you to make buttons\n these additional parameters are: \nObject(onClick, onDrag, onClickOff, onScroll, onHover, onHoverOff, onHoverOn, enableDragOff, clickGroup)",[
                 ("Button Type, PythUnity.Button", "this is the class type of Object.button\nto instatiate this type do:\nPythUnity.Button(onClick, onDrag, onClickOff, onScroll, onHover, onHoverOff, onHoverOn, enableDragOff)\nheres an example:\ndef Click(self, button):\n    print(\"clicked with button \" + button)\nbutton = PythUnity.Button(Click)", [
