@@ -166,10 +166,11 @@ def init():
       MainFunction(i, (0, 0))
     #RUN BUTTON PRESSES#####################
     group = None
+    blocked = False
     for i in clicked:
       if(not i[0].destroyed):
         #print(i[0].index)
-        if(group == None or group == i[0].clickGroup):
+        if((group == None or group == i[0].clickGroup) and not blocked):
           group = i[0].clickGroup
           for type in i[1]:
             if(type == 0):
@@ -198,6 +199,7 @@ def init():
             elif(type == 5):
               i[0].button.onHoverOff(i[0], "Off")
         else:
+          blocked = True
           if(i[0].button != None):
               if(3 in i[1] and i[0].button._Button__dragging and i[0].button.enableDragOff):
                 i[0].button._Button__dragging = False
