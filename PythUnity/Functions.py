@@ -2,7 +2,7 @@ from PythUnity import Variables
 import PythUnity
 import pygame
 def AddObject(image):
-  Variables.var.parts.append(image)
+  Variables.var.parts._ProtectedList__val.append(image)
   index = len(Variables.var.parts) - 1
   Variables.var.parts[index]._Object__index = index
   return index
@@ -20,7 +20,7 @@ def AddPrefab(name, obj):
       Err("Object value must be a " + str(PythUnity.Classes.Object) + " not a " + str(type(obj)))
   newObj = obj.Copy()
   newObj.Move(len(newObj.GetParentChildren()))
-  del newObj.GetParentChildren()[newObj.index]#need to remove prefab from child list
+  del newObj.GetParentChildren()._ProtectedList__val[newObj.index]#need to remove prefab from child list
   newObj._Object__parent = None
   newObj._Object__index = -1
   Variables.var.prefabs[name] = newObj
@@ -32,11 +32,8 @@ def GetPrefab(name):
   newObj = Variables.var.prefabs[name].Copy()
   newObj.Move(len(newObj.GetParentChildren()))
   return newObj
-def PrintFonts():
-  fonts = pygame.font.get_fonts() 
-  for i in fonts:
-    print(i)
-
+def GetFonts():
+  return pygame.font.get_fonts() 
 
 def TypeCheck(value, typeInput, name, className = "Object"):
     correct = False

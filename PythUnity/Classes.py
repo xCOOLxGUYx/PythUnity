@@ -1,30 +1,34 @@
 from PythUnity import Variables
 from PythUnity import Functions
+from PythUnity.ProtectedList import ProtectedList
 import copy
 import pygame
 import types
 import inspect
 class Object:
-  def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, onHover = None, onHoverOff = None, onHoverOn = None, enableDragOff = False, clickGroup = 0):
+  def __init__(self, rect, image, onClick = None, onDrag = None, onClickOff = None, onScroll = None, onHover = None, onHoverOff = None, onHoverOn = None, enableDragOff = False, clickGroup = 0, fitImage=False, effect=None):
     self.__destroyed = False
     self.__parent = None
-    self.__children = []
+    self.__children = ProtectedList("children", "Object", False, False, False, False)
     self.__variables = {}
     self.__image = None
     self.__transformedImage = None
     self.__text = None
     self.__color = None
-    self.__components = []
+    self.__components = ProtectedList("components", "Object", False, False, False, False)
     self.__clickGroup = None
     self.__velocity = (0, 0)
     self.__index = None
     self.__rect = None
+    self.__transformed = False
+    self.__transformedColor = False
+    self.renderOptions = RenderOptions(fitImage=fitImage, effect=effect)
     self.rect = rect
     self.clickGroup = clickGroup
     if(type(image) is tuple):
       self.color = image
     elif(type(image) is String):
-      self.text = copy.deepcopy(image)
+      self.text = image.Copy()
     elif(type(image) is pygame.Surface):
       self.image = image
     if onClick != None or onDrag != None or onScroll != None:
@@ -41,6 +45,16 @@ class Object:
     Functions.TypeCheck(value, Rect, "rect")
     self.__rect = value
     self.__rect._Rect__owner = self
+    self.__transformed = True
+    TransformText(self)
+  @property
+  def renderOptions(self):
+      return self.__renderOptions
+  @renderOptions.setter
+  def renderOptions(self, value):
+    Functions.TypeCheck(value, RenderOptions, "renderOptions")
+    self.__renderOptions = value
+    self._RenderOptions__owner = self
     TransformImage(self)
   @property
   def image(self):
@@ -49,7 +63,8 @@ class Object:
   def image(self, value):
     Functions.TypeCheck(value, pygame.Surface, "image")
     self.__image = value.convert_alpha()
-    TransformImage(self, changeColor=True)
+    self.__transformed = True
+    self.__transformedColor = True
   @property
   def destroyed(self):
     return self.__destroyed
@@ -88,6 +103,14 @@ class Object:
     Functions.Err("Cant set Object.variables, add each variable individualy")
   @property
   def transformedImage(self):
+    if(self.__transformed or self.__transformedColor):
+      TransformImage(self, self.__transformedColor)
+      self.__transformed = False
+      self.__transformedColor = False
+    if(self.text != None and self.image == None):
+      if(self.text._String__imageChanged or self.text._String__rowChanged):
+        self.text._String__imageChanged = False
+        RenderText(self)
     return self.__transformedImage
   @transformedImage.setter
   def transformedImage(self, value):
@@ -100,32 +123,16 @@ class Object:
   def text(self, value):
     Functions.TypeCheck(value, [String, type(None)], "text")
     self.__text = value
+    self.text._String__owner = self
+    self.text._String__imageChanged = True
+    TransformText(self)
   @property
   def color(self):
       return self.__color
   @color.setter
   def color(self, value):
-    Functions.TypeCheck(value, [tuple, type(None)], "color")
-    if(value == None):
-      self.__color = None
-    else:
-      temp = []
-      max = -1
-      for i in value:
-        if(i > max):
-          max = i
-        temp.append(i)
-      value = temp
-      if(max > 255):
-        for i in range(len(value)):
-          value[i] = value[i] / max * 255
-      if(value == None or len(value) == 4):
-          self.__color = (float(value[0]), float(value[1]), float(value[2]), float(value[3]))
-      elif(len(value) == 3):
-          self.__color = (float(value[0]), float(value[1]), float(value[2]), 255.0)
-      else:
-          Functions.Err("Object.color must have a length of 3 or 4 in RGBA or RGB format")
-    TransformImage(self, changeColor=True)
+    self.__color = SetColor(value, "color", "Object")
+    self.__transformedColor = True
   @property
   def clickGroup(self):
       return self.__clickGroup
@@ -171,8 +178,8 @@ class Object:
         Functions.Warn("Object.Move incorrect, index is greater than parent.children count")
     oldIndex = self.index
     self.__index = newIndex
-    del children[oldIndex]
-    children.insert(newIndex, self)
+    del children._ProtectedList__val[oldIndex]
+    children._ProtectedList__val.insert(newIndex, self)
     i = oldIndex
     if(newIndex > oldIndex):
       while(i < newIndex):
@@ -186,9 +193,9 @@ class Object:
     self.__Throw("Object.SetParent")
     children = self.GetParentChildren()
     self.Move(len(children))#make it so other children have their indexes fixed
-    del children[self.index]
+    del children._ProtectedList__val[self.index]
     self.__parent = newParent
-    self.__parent.children.append(self)
+    self.__parent.children._ProtectedList__val.append(self)
     self.__index = len(self.__parent.children) - 1
   def GetParentChildren(self):
     self.__Throw("Object.GetParentChildren")
@@ -203,33 +210,37 @@ class Object:
     oldParent = self.parent
     parChildren = self.GetParentChildren()
     CopyHelp(self)
+    tempVars = self.variables
+    self.__variables = None
     copied = copy.deepcopy(self)
+    self.__variables = tempVars
+    copied._Object__variables = copy.copy(tempVars)
     copied._Object__index = len(parChildren)
-    parChildren.append(copied)
+    parChildren._ProtectedList__val.append(copied)
     copied._Object__parent = oldParent
     copied.Move(self.index + 1)
     CopyUnHelp(self, oldParent)
+    CopyHelp2(copied, self, copied)
     CopyUnHelp(copied, oldParent)
-    CopyHelp2(copied)
     return copied
   def Destroy(self):
     self.__Throw("Object.Destroy")
     children = self.GetParentChildren()
     self.Move(len(children))
-    del children[self.index]
+    del children._ProtectedList__val[self.index]
     self.__index = -1 #will cause Functions.Error if used incorrectly, did this on purpous
     self.__destroyed = True
     for i in self.__children:
       i.Destroy()
   def AddComp(self, comp):
     self.__Throw("Object.AddComp")
-    self.__components.append(comp)
+    self.__components._ProtectedList__val.append(comp)
     if(comp[0] != None):
         comp[0](self)
   def DelComp(self, index):
       self.__Throw("Object.DelComp")
       if(len(self.__components) > index):
-          del self.__components[index]
+          del self.__components._ProtectedList__val[index]
       else:
           Functions.Err("Object.DelComp failed, index greater than comp index")
   def SetClickGroup(self, number):
@@ -341,17 +352,53 @@ class Button:
       TestFuncLen(value, "onHoverOn")
       self.__onHoverOn = value
 class String:
-  def __init__(self, text, fontSize, font, fontColor, backgroundColor):
+  def __init__(self, text, fontSize, font, fontColor, backgroundColor, alignment = 0, maxRows = 0):
+    self.__owner = None
     self.__fontSize = None
+    self.__imageChanged = False
     self.__text = None
     self.__font = None
     self.__fontColor = None
     self.__backgroundColor = None
+    self.__rows = ProtectedList("rows", "String", False, False, False, False, (StringFixRow, self))
+    self.__maxRows = 0
+    self.alignment = alignment
     self.fontSize = fontSize
-    self.text = text
     self.font = font
     self.fontColor = fontColor
     self.backgroundColor = backgroundColor
+    self.text = text
+    self.maxRows = maxRows
+  @property
+  def sizer(self):
+    StringFixRow(self)
+    return self.__sizer
+  @sizer.setter
+  def sizer(self, value):
+    Functions.Err("can't set PythUnity.sizer, you can only get it")
+  @property
+  def maxRows(self):
+    return self.__maxRows
+  @maxRows.setter
+  def maxRows(self, value):
+    Functions.TypeCheck(value, int, "maxRows", "String")
+    self.__maxRows = value
+    self.__rowChanged = True
+  @property
+  def rows(self):
+    StringFixRow(self)
+    return self.__rows
+  @rows.setter
+  def rows(self, value):
+    Functions.Err("can't set PythUnity.rows, you can only get it")
+  @property
+  def alignment(self):
+    return self.__alignment
+  @alignment.setter
+  def alignment(self, value):
+    Functions.TypeCheck(value, int, "alignment", "String")
+    self.__alignment = value
+    self.__imageChanged = True
   @property
   def fontSize(self):
     return self.__fontSize
@@ -359,6 +406,7 @@ class String:
   def fontSize(self, value):
     Functions.TypeCheck(value, int, "fontSize", "String")
     self.__fontSize = value
+    self.__rowChanged = True
   @property
   def text(self):
     return self.__text
@@ -366,6 +414,7 @@ class String:
   def text(self, value):
     Functions.TypeCheck(value, str, "text", "String")
     self.__text = value
+    self.__rowChanged = True
   @property
   def font(self):
     return self.__font
@@ -373,24 +422,50 @@ class String:
   def font(self, value):
     Functions.TypeCheck(value, str, "font", "String")
     self.__font = value
+    self.__rowChanged = True
   @property
   def fontColor(self):
     return self.__fontColor
   @fontColor.setter
   def fontColor(self, value):
-    Functions.TypeCheck(value, [tuple, type(None)], "fontColor", "String")
-    self.__fontColor = value
+    self.__fontColor = SetColor(value, "fontColor", "String")
+    self.__imageChanged = True
   @property
   def backgroundColor(self):
     return self.__backgroundColor
   @backgroundColor.setter
   def backgroundColor(self, value):
-    Functions.TypeCheck(value, [tuple, type(None)], "backgroundColor", "String")
-    self.__backgroundColor = value
+    self.__backgroundColor = SetColor(value, "backgroundColor", "String")
+    self.__imageChanged = True
   #######
+  def Copy(self):
+    self.rows#do this to clear the self.__rowChanged
+    owner = self.__owner
+    onAccess = self.__rows._ProtectedList__onAccess
+    sizer = self.sizer
+    self.__sizer = None
+    self.__rows._ProtectedList__onAccess = None
+    self.__owner = None
+    new = copy.deepcopy(self)
+    self.__sizer = sizer
+    self.__rows._ProtectedList__onAccess = onAccess
+    new._String__sizer = sizer
+    new._String__rows._ProtectedList__onAccess = (onAccess[0], new)
+    self.__owner = owner
+    return new
   def GetSize(self):
-    return pygame.font.Font(self.font + ".ttf", self.fontSize).size(self.text)
-class Rect: #need to use @property so cant use pygame.rect
+    height = 0
+    self.rows#do this to clear the self.__rowChanged
+    sizer = self.sizer
+    for row in self.rows:
+      height = height + sizer.size(row)[1]
+    width = 0
+    for row in self.rows:
+      size = sizer.size(row)[0]
+      if(size > width):
+        width = size
+    return (width, height)
+class Rect: #need to use @property so cant use pygame.Rect
     def __init__(self, left, top, width, height):
         self.__owner = None
         self.__left = None
@@ -423,7 +498,8 @@ class Rect: #need to use @property so cant use pygame.rect
       Functions.TypeCheck(value, [float, int], "width", "Rect")
       self.__width = int(value)
       if(self.__owner != None):
-        TransformImage(self.__owner)
+        self.__owner._Object__transformed = True
+        TransformText(self.__owner)
     @property
     def height(self):
         return self.__height
@@ -432,7 +508,8 @@ class Rect: #need to use @property so cant use pygame.rect
       Functions.TypeCheck(value, [float, int], "height", "Rect")
       self.__height = int(value)
       if(self.__owner != None):
-        TransformImage(self.__owner)
+        self.__owner._Object__transformed = True
+        TransformText(self.__owner)
     ######
     def __getitem__(self, i):
       options = RectItemHelp(self, i)
@@ -447,6 +524,20 @@ class Rect: #need to use @property so cant use pygame.rect
         return pygame.Rect(self.left, self.top, self.width, self.height)
     def Copy(self):
         return Rect(self.left, self.top, self.width, self.height)
+class RenderOptions:
+  def __init__(self, fitImage=False, effect=None):#effect hasnt been implemented yet
+    self.__owner = None
+    self.fitImage = fitImage
+    self.effect = effect
+  @property
+  def fitImage(self):
+    return self.__fitImage
+  @fitImage.setter
+  def fitImage(self, value):
+    Functions.TypeCheck(value, type(False), "fitImage", "RenderOptions")
+    self.__fitImage = value
+    if(self.__owner != None):
+      self.__owner._Object__imageChanged = True
 def TestFuncLen(func, name, neededArgs = ["self"], className="Button"):
     if(func != None):
         length = len(inspect.getargspec(func)[0])
@@ -460,10 +551,15 @@ def RectItemHelp(self, i):
     Functions.Err("in PythUnity.Rect[index], index must be between values 0 and " + str(len(options)))
   return options
 def CopyHelp(self):
-  if(self.image != None):
-    self._Object__image = (pygame.image.tostring(self._Object__image, 'RGBA'), self._Object__image.get_size())
+  if(self.transformedImage != None):
     self._Object__transformedImage = (pygame.image.tostring(self._Object__transformedImage, 'RGBA'), self._Object__transformedImage.get_size())
-  self.rect._Rect__owner = None
+  if(self.image != None):
+    self._Object__image = (pygame.image.tostring(self.image, 'RGBA'), self.image.get_size())
+  self._Object__rect._Rect__owner = None
+  self.renderOptions._RenderOptions__owner = None
+  if(self.text != None):
+    self.text._String__owner = None
+    self.text._String__sizer = None
   self._Object__parent = None
   for i in self.children:
     CopyHelp(i)
@@ -471,22 +567,35 @@ def CopyHelp(self):
 def CopyUnHelp(self, parent):
   if(self._Object__image != None):
     self._Object__image = pygame.image.fromstring(self._Object__image[0], self._Object__image[1], 'RGBA')
+  if(self._Object__transformedImage != None):
     self._Object__transformedImage = pygame.image.fromstring(self._Object__transformedImage[0], self._Object__transformedImage[1], 'RGBA')
-  self.rect._Rect__owner = self
+  self._Object__rect._Rect__owner = self
+  self.renderOptions._RenderOptions__owner = self
+  if(self.text != None):
+    self.text._String__owner = self
+    self.text._String__sizer = pygame.font.Font(self.text.font + ".ttf", self.text._String__realFontSize)
   self._Object__parent = parent
   for i in self.children:
     CopyUnHelp(i, self)
-def CopyHelp2(self):
+def CopyHelp2(self, og, ogCopy):
   atts = dir(self)
   for att in atts:
-    attObj = getattr(self, att)
-    if(att[0] != "_" or att[1] == "O"):#if its a _Object__ atribute still copy
+    if(("_Object__" + att) not in atts):
+      attObj = getattr(self, att)
+      if(att[0] != "_" or att[1] == "O"):#if its a _Object__ atribute still copy
         attType = type(attObj)
-        if(attType is not types.MethodType and attType is not list and attType is not type(None) and attType is not Object and attType is not pygame.Surface and attType is not Rect):
-            if(("_Object__" + att) not in atts):
-              setattr(self, att, copy.deepcopy(attObj))
+        if(attType is not types.MethodType and attType is not list and attType is not type(None) and attType is not Object and attType is not type({})):
+          setattr(self, att, copy.deepcopy(attObj))
+  for i in self.variables.keys():
+    attType = type(self.variables[i])
+    if(attType is Object):
+      if self.variables[i] in og.Decendants():
+        index = og.Decendants().index(self.variables[i])
+        self.variables[i] = ogCopy.Decendants()[index]
+      elif(self.variables[i] == og):
+        self.variables[i] = ogCopy
   for i in self.children:
-    CopyHelp2(i)
+    CopyHelp2(i, og, ogCopy)
 
 def TransformImage(self, changeColor = False):
   if(self.image != None):
@@ -503,11 +612,117 @@ def TransformImage(self, changeColor = False):
       elif(type(self.color) is type(None)):
           self._Object__transformedImage = self.image
       ratio = self.image.get_size()
-      max = ratio[0]
-      if(max < ratio[1]):
-        max = ratio[1]
-      ratio = (float(ratio[0] / max), float(ratio[1] / max))
+      if(not self.renderOptions.fitImage):
+        max = ratio[0]
+        if(max < ratio[1]):
+          max = ratio[1]
+        ratio = (float(ratio[0] / max), float(ratio[1] / max))
+      else:
+        ratio = (1, 1)
       ratio = (int(ratio[0] * self.rect.width), int(ratio[1] * self.rect.height))
       self._Object__transformedImage = pygame.transform.scale(self._Object__transformedImage, ratio)
   else:
     self._Object__transformedImage = None
+def StringFixRow(self):
+  if(self._String__rowChanged):
+    self._String__rowChanged = False
+    self._String__imageChanged = True
+    StringResize(self)
+    StringSetRow(self)
+def StringResize(self, resetSize = True):
+  if(resetSize):
+    self._String__realFontSize = self.fontSize
+  changeText = self.text
+  rows = []
+  while(True):
+    enterIndex = changeText.find("\n")
+    if(enterIndex == -1 or (self.maxRows > 0 and self.maxRows == len(rows)+1)):
+      if(enterIndex != -1):
+        rows.append(changeText[:enterIndex] + changeText[enterIndex+1:])
+      else:
+        rows.append(changeText)
+      break
+    rows.append(changeText[:enterIndex])
+    changeText = changeText[enterIndex+1:]
+  i = 0
+  self._String__sizer = pygame.font.Font(self.font + ".ttf", self._String__realFontSize)
+  if(self._String__owner != None and self._String__owner.rect.width > 0):
+    sizer = self._String__sizer
+    while(i < len(rows)):
+      size = sizer.size(rows[i])[0]
+      newRow = ""
+      while(size > self._String__owner.rect.width):
+        space = 0
+        if (" " in rows[i]):
+          space = rows[i].rindex(" ")+1
+        chars = len(rows[i]) - space
+        if(sizer.size(rows[i][space:])[0] <= self._String__owner.rect.width):
+          newRow = rows[i][space-1:] + newRow
+          rows[i] = rows[i][:space-1]
+          if(sizer.size(rows[i])[0] <= self._String__owner.rect.width):
+            newRow = newRow[1:]
+        else:
+          while(sizer.size(rows[i])[0] > self._String__owner.rect.width and rows[i][-1] != " "):
+            newRow = rows[i][-1] + newRow
+            rows[i] = rows[i][:-1]
+          if(rows[i][-1] != " "):
+            newRow = rows[i][-1] + newRow
+            rows[i] = rows[i][:-1] + "-"
+        size = sizer.size(rows[i])[0]
+      i = i + 1
+      if(newRow != ""):
+        rows.insert(i, newRow)
+  self._String__rows._ProtectedList__val = rows
+def StringSetRow(self): 
+  self._String__realFontSize = self.fontSize
+  if(self.maxRows >= 1):
+    while(len(self._String__rows._ProtectedList__val) > self.maxRows):
+      self._String__realFontSize = self._String__realFontSize - 1
+      StringResize(self, False)
+  if(self._String__owner != None):
+    if(self._String__owner.rect.height > 0):
+      while(self._String__owner.rect.height < self.GetSize()[1] and self._String__realFontSize > 0):
+        self._String__realFontSize = self._String__realFontSize - 1
+        StringResize(self, False)
+def TransformText(self):
+  if(self.text != None):
+    self.text._String__rowChanged = True
+
+def RenderText(self):
+  font = self.text.sizer
+  size = self.text.GetSize()
+  copRect = pygame.Rect(0, 0, size[0], size[1])
+  transformImage = pygame.Surface(size, pygame.SRCALPHA)
+  for row in range(len(self.text.rows)):
+    tempRect = copy.deepcopy(copRect)
+    tempOffset = 0
+    if(self.text.alignment == 1):
+      tempOffset = (size[0] - font.size(self.text.rows[row])[0])/2
+    elif(self.text.alignment == 2):
+      tempOffset = (size[0] - font.size(self.text.rows[row])[0])
+    tempRect[0] = tempRect[0] + tempOffset
+    transformImage.blit(font.render(self.text.rows[row], True, self.text.fontColor, self.text.backgroundColor), tempRect)
+    copRect.top = copRect.top + font.size(self.text.rows[row])[1]
+  self._Object__transformedImage = transformImage
+
+def SetColor(value, varName, className):
+  Functions.TypeCheck(value, [tuple, type(None)], varName, className)
+  output = None
+  if(value != None):
+    temp = []
+    max = -1
+    for i in value:
+      if(i > max):
+        max = i
+      temp.append(i)
+    value = temp
+    if(max > 255):
+      for i in range(len(value)):
+        value[i] = value[i] / max * 255
+    if(value == None or len(value) == 4):
+      output = (float(value[0]), float(value[1]), float(value[2]), float(value[3]))
+    elif(len(value) == 3):
+      output = (float(value[0]), float(value[1]), float(value[2]), 255.0)
+    else:
+      Functions.Err(className + "." + varName + " must have a length of 3 or 4 in RGBA or RGB format")
+  return output

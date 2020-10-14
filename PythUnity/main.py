@@ -4,12 +4,30 @@ from PythUnity import Classes
 from PythUnity import Variables
 from PythUnity import Functions
 from datetime import datetime
+global nextFrameKeys
+nextFrameKeys = {}
 
+specialKeys = {304: "LeftShift", 303: "RightShift", 306: "LeftControl", 
+305: "RightControl", 300: "NumLock", 301: "CapsLock", 308: "LeftAlt", 307: "RightAlt", 9: "Tab", 
+273: "ArrowUp", 274: "ArrowDown", 275: "ArrowRight", 276: "ArrowLeft", 27: "Escape", 8: "Backspace", 13: "Enter", 271: "NumpadEnter", 311: "Windows", 319: "ContextMenu",
+279: "End", 281: "PageDown", 280: "PageUp", 278: "Home", 127: "Delete", 266: "NumpadDecimal", 19: "Pause", 316: "PrintScreen",
+267: "NumpadDivide", 268: "NumpadMultiply", 269: "NumpadSubtract", 270: "NumpadAdd"}
+for i in range(1, 13):#add all F's
+  specialKeys[281 + i] = "f" + str(i)
+for i in range(0, 10):#add all Numpad
+  specialKeys[256 + i] = "Numpad" + str(i)
+def KeyToString(key):
+  if(key in specialKeys.keys()):
+    return specialKeys[key]
+  else:
+    return chr(key)
 def init():
   pygame.init()
   #Screen######
   global screen
   screen = pygame.display.set_mode(Variables.var.screenRect)
+  pygame.display.set_icon(Variables.var.icon)
+  pygame.display.set_caption(Variables.var.appName)
   #############
 
   #FUNCTIONS##################
@@ -25,73 +43,55 @@ def init():
   global clicked
   clicked = []
   #########################################
-
   #MAIN FUNCTION###########################
   def MainFunction(i, offset):
     #SET RECT##############################
-      rect = None
-      if(not(i.text is None)):
-        font = pygame.font.Font(i.text.font + ".ttf", i.text.fontSize) 
-        text = font.render(i.text.text, True, i.text.fontColor, i.text.backgroundColor)
-        rect = font.size((i.text.text))
-        rect = pygame.Rect(i.rect.left + offset[0], i.rect.top + offset[1], rect[0], rect[1])
-        #print(rect)
-        screen.blit(text, rect)
-      elif(not(i.image is None)):
-        rect = i.rect.Copy()
-        rect.left = rect.left + offset[0]
-        rect.top = rect.top + offset[1]
-        screen.blit(i._Object__transformedImage, rect.ToPygameRect())
-      elif(not(i.color is None)):
-        rect = i.rect.Copy()
-        rect.left = rect.left + offset[0]
-        rect.top = rect.top + offset[1]
-        if(len(i.color) == 3):
-          pygame.draw.rect(screen, i.color, rect.ToPygameRect())
-        elif(len(i.color) == 4):
-          s = pygame.Surface((rect.width, rect.height))
-          s.set_alpha(i.color[3])
-          s.fill((i.color[0], i.color[1], i.color[2]))
-          screen.blit(s, (rect.left, rect.top))
-        elif(len(i.color) != 0):
-          raise ValueError("Object has invalid color can be in formats: RGB and RGBA, or as ()")
+    rect = i.rect.Copy()
+    rect.left = rect.left + offset[0]
+    rect.top = rect.top + offset[1]
+    if(not(i.image is None) or not(i.text is None)):
+      screen.blit(i.transformedImage, rect.ToPygameRect())
+    elif(not(i.color is None)):
+      if(i.color[3] == 255):
+        pygame.draw.rect(screen, i.color, rect.ToPygameRect())
       else:
-        rect = i.rect.Copy()
-        rect.left = rect.left + offset[0]
-        rect.top = rect.top + offset[1]
-      ########################################
-      #GET BUTTON PRESSES#####################
-      hovering = Touching(rect, Variables.var.mousePosition)
-      global clicked
-      type = []
-      if(i.button != None):
-        touching = mousePressed[0] and hovering
-        if(touching):
-          type = [0]
-        elif(mouseScrolling[0] and not i.button.dragging and hovering):
-          if(i.button.onScroll != None):
-            type = [1]
-        elif(i.button.dragging and (hovering or i.button.enableDragOff) and Variables.var.mouseDragging):
-          if(i.button.onDrag != None):
-            type = [2]
-        elif((not hovering and not i.button.enableDragOff) or not Variables.var.mouseDragging):
-          if(i.button.dragging == True):
-            type = [3]
-        if(hovering):
-          type.append(4)
-        elif(not hovering and i.button._Button__hovering):
-          i.button._Button__hovering = False
-          if(i.button.onHoverOff != None):
-            type.append(5)
-      if(len(type) != 0 or hovering):
-        clicked.insert(0, (i, type))
-      ########################################
-      for iChild in i.children:
-        MainFunction(iChild, (rect.left, rect.top))
-      i.rect.left = i.rect.left + i.velocity[0] * Variables.var.deltaTime
-      i.rect.top = i.rect.top + i.velocity[1] * Variables.var.deltaTime
-      ########################################
-  #########################################
+        s = pygame.Surface((rect.width, rect.height))
+        s.set_alpha(i.color[3])
+        s.fill((i.color[0], i.color[1], i.color[2]))
+        screen.blit(s, (rect.left, rect.top))
+    ########################################
+    #GET BUTTON PRESSES#####################
+    hovering = Touching(rect, Variables.var.mousePosition)
+    global clicked
+    type = []
+    if(i.button != None):
+      touching = mousePressed[0] and hovering
+      if(touching):
+        type = [0]
+      elif(mouseScrolling[0] and not i.button.dragging and hovering):
+        if(i.button.onScroll != None):
+          type = [1]
+      elif(i.button.dragging and (hovering or i.button.enableDragOff) and Variables.var.mouseDragging):
+        if(i.button.onDrag != None):
+          type = [2]
+      elif((not hovering and not i.button.enableDragOff) or not Variables.var.mouseDragging):
+        if(i.button.dragging == True):
+          type = [3]
+      if(hovering):
+        type.append(4)
+      elif(not hovering and i.button._Button__hovering):
+        i.button._Button__hovering = False
+        if(i.button.onHoverOff != None):
+          type.append(5)
+    if(len(type) != 0 or hovering):
+      clicked.insert(0, (i, type))
+    ########################################
+    for iChild in i.children:
+      MainFunction(iChild, (rect.left, rect.top))
+    i.rect.left = i.rect.left + i.velocity[0] * Variables.var.deltaTime
+    i.rect.top = i.rect.top + i.velocity[1] * Variables.var.deltaTime
+    ########################################
+#########################################
   def Update(i):
       if(not i.destroyed):
         for iComp in i.components:
@@ -101,12 +101,26 @@ def init():
             iComp[1](i)
         for iChild in i.children:
           Update(iChild)
+  global nextFrameKeys
+  keys = Variables.var.keys
   while True:
     startTime = datetime.now()#Set Start Time
     #GetMousePos##############################
     mousePressed = (False, "")
     mouseScrolling = (False, 0)
     mouseUp = ""
+    deleteKeys = []
+    for key in keys.keys():
+      state = keys[key]
+      if(state == "Pressed"):
+        keys[key] = "Held"
+      elif(state == "Off"):
+        deleteKeys.append(key)
+    for i in deleteKeys:
+      del keys[i]
+    for key in nextFrameKeys.keys():
+      keys[key] = nextFrameKeys[key]
+    nextFrameKeys = {}
     for event in pygame.event.get():
       if event.type == pygame.MOUSEBUTTONDOWN: 
         if event.button == 1:
@@ -136,6 +150,15 @@ def init():
       elif event.type == pygame.MOUSEMOTION:
         Variables.var._Var__oldMousePosition = Variables.var.mousePosition
         Variables.var._Var__mousePosition = event.pos
+      elif event.type == pygame.KEYDOWN:
+        key = KeyToString(event.key)
+        keys[key] = "Pressed"
+      elif event.type == pygame.KEYUP:
+        key = KeyToString(event.key)
+        if(keys[key] == "Pressed"):
+          nextFrameKeys[key] = "Off"
+        else:
+          keys[key] = "Off"
     ##########################################
     screen.fill(Variables.var.backgroundColor)
     clicked = []

@@ -1,8 +1,12 @@
 from PythUnity.Functions import Err
 from PythUnity.Functions import TypeCheck
+from PythUnity.ProtectedList import ProtectedList
+from PythUnity import __file__
+import pygame
+import os
 class Var:
     def  __init__(self):
-        self.__parts = []
+        self.__parts = ProtectedList("parts", "v", False, False, False, False)
         self.__deltaTime = 0
         self.__prefabs = {}
         self.__starts = []
@@ -11,7 +15,26 @@ class Var:
         self.__oldMousePosition = (0, 0)
         self.__screenRect = (800, 600)
         self.__mouseDragging = False
+        self.icon = pygame.transform.scale(pygame.image.load(os.path.dirname(__file__) + "/Assets/Icon.jpg"), (32, 32))
+        self.appName = "PythUnity window"
+        self.keys = {}
     ######
+    @property
+    def icon(self):
+      return self.__icon
+    @icon.setter
+    def icon(self, value):
+      TypeCheck(value, pygame.Surface, "icon", "v.")
+      pygame.display.set_icon(value)
+      self.__icon = value
+    @property
+    def appName(self):
+      return self.__appName
+    @appName.setter
+    def appName(self, value):
+      TypeCheck(value, str, "appName", "v.")
+      pygame.display.set_caption(value)
+      self.__appName = value
     @property
     def parts(self):
       return self.__parts
