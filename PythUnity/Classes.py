@@ -15,6 +15,8 @@ class Object:
     self.__transformedImage = None
     self.__text = None
     self.__color = None
+    self.__oldPos = (0, 0, 0, 0)
+    self.__edited = True
     self.__components = ProtectedList("components", "Object", False, False, False, False)
     self.__clickGroup = None
     self.__velocity = (0, 0)
@@ -22,7 +24,13 @@ class Object:
     self.__rect = None
     self.__transformed = False
     self.__transformedColor = False
+    self.__updateLocal = False
+    self.__updateGlobal = False
     self.renderOptions = RenderOptions(fitImage=fitImage, effect=effect)
+    self.__globalRect = Rect(0, 0, 0, 0)
+    self.__globalRect._Rect__owner = self
+    self.__globalRect._Rect__global = True
+    self.__enabled = True
     self.rect = rect
     self.clickGroup = clickGroup
     if(type(image) is tuple):
@@ -39,12 +47,46 @@ class Object:
   #####
   @property
   def rect(self):
+      if(self.__updateLocal):
+        self.__updateLocal = False
+        offset = (0, 0)
+        if(self.parent != None):
+          offset = (self.parent.globalRect.left, self.parent.globalRect.top)
+        self.__rect._Rect__left = self.globalRect.left - offset[0]
+        self.__rect._Rect__top = self.globalRect.top - offset[1]
+        self.__rect._Rect__width = self.globalRect.width
+        self.__rect._Rect__height = self.globalRect.height
       return self.__rect
   @rect.setter
   def rect(self, value):
+    self.__edited = True
     Functions.TypeCheck(value, Rect, "rect")
     self.__rect = value
     self.__rect._Rect__owner = self
+    self.__rect._Rect__global = False
+    UpdateRects(self.__rect)
+    self.__transformed = True
+    TransformText(self)
+  @property
+  def globalRect(self):
+      if(self.__updateGlobal):
+        self.__updateGlobal = False
+        offset = (0, 0)
+        if(self.parent != None):
+          offset = (self.parent.globalRect.left, self.parent.globalRect.top)
+        self.__globalRect._Rect__left = self.rect.left + offset[0]
+        self.__globalRect._Rect__top = self.rect.top + offset[1]
+        self.__globalRect._Rect__width = self.rect.width
+        self.__globalRect._Rect__height = self.rect.height
+      return self.__globalRect
+  @globalRect.setter
+  def globalRect(self, value):
+    self.__edited = True
+    Functions.TypeCheck(value, Rect, "globalRect")
+    self.__globalRect = value
+    self.__globalRect._Rect__owner = self
+    self.__globalRect._Rect__global = True
+    UpdateRects(self.__globalRect)
     self.__transformed = True
     TransformText(self)
   @property
@@ -52,17 +94,27 @@ class Object:
       return self.__renderOptions
   @renderOptions.setter
   def renderOptions(self, value):
+    self.__edited = True
     Functions.TypeCheck(value, RenderOptions, "renderOptions")
     self.__renderOptions = value
     self._RenderOptions__owner = self
     TransformImage(self)
   @property
+  def enabled(self):
+      return self.__enabled
+  @enabled.setter
+  def enabled(self, value):
+    self.__edited = True
+    Functions.TypeCheck(value, bool, "enabled")
+    self.__enabled = value
+  @property
   def image(self):
     return self.__image
   @image.setter
   def image(self, value):
+    self.__edited = True
     Functions.TypeCheck(value, pygame.Surface, "image")
-    self.__image = value.convert_alpha()
+    self.__image = value#.convert_alpha()
     self.__transformed = True
     self.__transformedColor = True
   @property
@@ -121,6 +173,7 @@ class Object:
       return self.__text
   @text.setter
   def text(self, value):
+    self.__edited = True
     Functions.TypeCheck(value, [String, type(None)], "text")
     self.__text = value
     self.text._String__owner = self
@@ -131,6 +184,7 @@ class Object:
       return self.__color
   @color.setter
   def color(self, value):
+    self.__edited = True
     self.__color = SetColor(value, "color", "Object")
     self.__transformedColor = True
   @property
@@ -171,6 +225,7 @@ class Object:
     return indexes
   def Move(self, newIndex):#components can have their update function skipped on accident if ran in another comp.update
     self.__Throw("Object.Move")
+    self.__edited = True
     children = self.GetParentChildren()
     if(newIndex < 0):
         Functions.Err("Object.Move failed, index less than 0")
@@ -191,6 +246,8 @@ class Object:
         i = i - 1
   def SetParent(self, newParent):
     self.__Throw("Object.SetParent")
+    self.__edited = True
+    self.__updateGlobal = True
     children = self.GetParentChildren()
     self.Move(len(children))#make it so other children have their indexes fixed
     del children._ProtectedList__val[self.index]
@@ -225,6 +282,7 @@ class Object:
     return copied
   def Destroy(self):
     self.__Throw("Object.Destroy")
+    Variables.updates.append(self.globalRect.ToPygameRect())
     children = self.GetParentChildren()
     self.Move(len(children))
     del children._ProtectedList__val[self.index]
@@ -399,14 +457,16 @@ class String:
     Functions.TypeCheck(value, int, "alignment", "String")
     self.__alignment = value
     self.__imageChanged = True
+    SetEdited(self)
   @property
   def fontSize(self):
     return self.__fontSize
   @fontSize.setter
   def fontSize(self, value):
-    Functions.TypeCheck(value, int, "fontSize", "String")
+    Functions.TypeCheck(value, [int, float], "fontSize", "String")
     self.__fontSize = value
     self.__rowChanged = True
+    SetEdited(self)
   @property
   def text(self):
     return self.__text
@@ -415,6 +475,7 @@ class String:
     Functions.TypeCheck(value, str, "text", "String")
     self.__text = value
     self.__rowChanged = True
+    SetEdited(self)
   @property
   def font(self):
     return self.__font
@@ -423,6 +484,7 @@ class String:
     Functions.TypeCheck(value, str, "font", "String")
     self.__font = value
     self.__rowChanged = True
+    SetEdited(self)
   @property
   def fontColor(self):
     return self.__fontColor
@@ -430,6 +492,7 @@ class String:
   def fontColor(self, value):
     self.__fontColor = SetColor(value, "fontColor", "String")
     self.__imageChanged = True
+    SetEdited(self)
   @property
   def backgroundColor(self):
     return self.__backgroundColor
@@ -437,6 +500,7 @@ class String:
   def backgroundColor(self, value):
     self.__backgroundColor = SetColor(value, "backgroundColor", "String")
     self.__imageChanged = True
+    SetEdited(self)
   #######
   def Copy(self):
     self.rows#do this to clear the self.__rowChanged
@@ -472,6 +536,7 @@ class Rect: #need to use @property so cant use pygame.Rect
         self.__top = None
         self.__width = None
         self.__height = None
+        self.__global = False
         self.left = left
         self.top = top
         self.width = width
@@ -482,34 +547,42 @@ class Rect: #need to use @property so cant use pygame.Rect
     @left.setter
     def left(self, value):
       Functions.TypeCheck(value, [float, int], "left", "Rect")
-      self.__left = int(value)
+      self.__left = float(value)
+      UpdateRects(self)
+      SetEdited(self)
     @property
     def top(self):
         return self.__top
     @top.setter
     def top(self, value):
       Functions.TypeCheck(value, [float, int], "top", "Rect")
-      self.__top = int(value)
+      self.__top = float(value)
+      UpdateRects(self)
+      SetEdited(self)
     @property
     def width(self):
         return self.__width
     @width.setter
     def width(self, value):
       Functions.TypeCheck(value, [float, int], "width", "Rect")
-      self.__width = int(value)
-      if(self.__owner != None):
+      self.__width = float(value)
+      UpdateRects(self)
+      if(self.__owner != None and not self.__global):
         self.__owner._Object__transformed = True
         TransformText(self.__owner)
+      SetEdited(self)
     @property
     def height(self):
         return self.__height
     @height.setter
     def height(self, value):
       Functions.TypeCheck(value, [float, int], "height", "Rect")
-      self.__height = int(value)
-      if(self.__owner != None):
+      self.__height = float(value)
+      UpdateRects(self)
+      if(self.__owner != None and not self.__global):
         self.__owner._Object__transformed = True
         TransformText(self.__owner)
+      SetEdited(self)
     ######
     def __getitem__(self, i):
       options = RectItemHelp(self, i)
@@ -538,6 +611,7 @@ class RenderOptions:
     self.__fitImage = value
     if(self.__owner != None):
       self.__owner._Object__imageChanged = True
+    SetEdited(self)
 def TestFuncLen(func, name, neededArgs = ["self"], className="Button"):
     if(func != None):
         length = len(inspect.getargspec(func)[0])
@@ -556,6 +630,7 @@ def CopyHelp(self):
   if(self.image != None):
     self._Object__image = (pygame.image.tostring(self.image, 'RGBA'), self.image.get_size())
   self._Object__rect._Rect__owner = None
+  self._Object__globalRect._Rect__owner = None
   self.renderOptions._RenderOptions__owner = None
   if(self.text != None):
     self.text._String__owner = None
@@ -570,10 +645,11 @@ def CopyUnHelp(self, parent):
   if(self._Object__transformedImage != None):
     self._Object__transformedImage = pygame.image.fromstring(self._Object__transformedImage[0], self._Object__transformedImage[1], 'RGBA')
   self._Object__rect._Rect__owner = self
+  self._Object__globalRect._Rect__owner = self
   self.renderOptions._RenderOptions__owner = self
   if(self.text != None):
     self.text._String__owner = self
-    self.text._String__sizer = pygame.font.Font(self.text.font + ".ttf", self.text._String__realFontSize)
+    self.text._String__sizer = pygame.font.Font(self.text.font + ".ttf", int(self.text._String__realFontSize))
   self._Object__parent = parent
   for i in self.children:
     CopyUnHelp(i, self)
@@ -645,7 +721,7 @@ def StringResize(self, resetSize = True):
     rows.append(changeText[:enterIndex])
     changeText = changeText[enterIndex+1:]
   i = 0
-  self._String__sizer = pygame.font.Font(self.font + ".ttf", self._String__realFontSize)
+  self._String__sizer = pygame.font.Font(self.font + ".ttf", int(self._String__realFontSize))
   if(self._String__owner != None and self._String__owner.rect.width > 0):
     sizer = self._String__sizer
     while(i < len(rows)):
@@ -712,6 +788,8 @@ def SetColor(value, varName, className):
     temp = []
     max = -1
     for i in value:
+      if(i < 0):
+        Functions.Err("color cant have a negative value")
       if(i > max):
         max = i
       temp.append(i)
@@ -726,3 +804,19 @@ def SetColor(value, varName, className):
     else:
       Functions.Err(className + "." + varName + " must have a length of 3 or 4 in RGBA or RGB format")
   return output
+def UpdateRects(self):
+  if(self._Rect__owner != None):
+    self._Rect__owner._Object__updateLocal = self._Rect__global
+    self._Rect__owner._Object__updateGlobal = not self._Rect__global
+    for i in self._Rect__owner.Decendants():
+      i._Object__updateGlobal = True
+def SetEdited(self):
+  owner = None
+  if(type(self) == Rect):
+    owner = self._Rect__owner
+  elif(type(self) == RenderOptions):
+    owner = self._RenderOptions__owner
+  else:
+    owner = self._String__owner
+  if(owner != None):
+    owner._Object__edited = True

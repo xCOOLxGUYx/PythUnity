@@ -52,7 +52,7 @@ print("Run PythUnity.help() for help")
 border()
 def help():
     array = ("Help Options", "This is the help menu!\ntype the number of one of the options below for more information\nnote: going in order is recommended\n\nif you use features not talked about here you will most likely crash the application", [
-        ("Startup", "to start up its very simple\nheres an example of a startup:\n\nimport PythUnity\n#PythUnity.help()\ndef Start():\n   print(\"started\")\nPythUnity.starts.append(Start)\nPythUnity.init()\n\nAnd thats all you have to do, \nyou can put whatever you want before PythUnity.init() runs but after you run PythUnity.init() the rest of your code wont run,\nso you'll have to use buttons and components to get what you need done, \nas you go throught this help section you'll learn how to do so", []),
+        ("Startup", "to start up its very simple\nheres an example of a startup:\n\nimport PythUnity\n#PythUnity.help()\ndef Start():\n   print(\"started\")\nPythUnity.v.starts.append(Start)\nPythUnity.init()\n\nAnd thats all you have to do, \nyou can put whatever you want before PythUnity.init() runs but after you run PythUnity.init() the rest of your code wont run,\nso you'll have to use buttons and components to get what you need done, \nas you go throught this help section you'll learn how to do so", []),
         ("Creating Objects", "You can create GameObjects just like in Unity! by using PythUnity.Object(), choose one of the options too learn more", [
             ("Creating Rectangles", "to create a rectange you must do PythUnity.Object(transform, color) \nthe transform parameter is an instance of the PythUnity.Rect() value,\nThe color parameter is a tuple ie. (255, 255, 255) or (255, 255, 255, 50) for semi transparency\nthe two formats you can use are RGB and RGBA", [
                 ("PythUnity.Rect", "instantiating the PythUnity.Rect looks like this PythUnity.Rect(dist_from_left, dist_from_top, width, height)", [
@@ -66,7 +66,7 @@ def help():
             ("Creating Images", "if you dont know how to make a rectange I would recommend going back\nmaking an image is alot like making a rectange\nthe difference is instead of using a color you do a PythUnity.Surface\nan example is PythUnity.Object(transform, PythUnity.image(image_path_string))\nthe code above will make an object with an image from that filepath", [
                 ("Image Coloring", "you can change the color of images\nfor example take the example we just saw and add \n.color = (50, 255, 50)\nto turn the image green\n\nimage = PythUnity.Object(PythUnity.Rect(0, 0, 500, 500), PythUnity.image(\"image.jpg\"))\nimage.color = (50, 255, 50)", []),
                 ("PythUnity.Surface & PythUnity.image", "PythUnity.Surface and PythUnity.image are the same as pygame.Surface and pygame.image, \nso for documentation go to https://www.pygame.org/docs/\nNote: PythUnity.imag.load is different from pygame.image.load because PythUnity.image.load supports transparency", [
-                    ("PythUnity.image.load", "its the same as pygame.image.load except that it sets the colorKey to support PNG transparency it also converts it to speed up rendering\nfor example: \nPythunity.image.load(\"Image.png\", colorKey=(255, 0, 0))\n\nthis will make the color red transparent, by default the colorKey is set to (255, 0, 255)", [])]),]), 
+                    ("PythUnity.image.load", "its the same as pygame.image.load except that it sets the colorKey to support PNG transparency it also converts it to a Surface to speed up rendering\nfor example: \nPythunity.image.load(\"Image.png\", colorKey=(255, 0, 0))\n\nthis will make the color red transparent, by default the colorKey is set to None\nif the colorKey is set to None it will make a image without a alpha channel\nremoving the alpha channel speeds up rendering alot", [])]),]), 
             ("Creating Text", "Creating text takes more space but is just as easy as the others, select one of the options to learn more", [
                 ("Format", "the format for creating text looks like this:\nPythUnity.Object(transform, PythUnity.String(message, font_size, font, font_color, background_color, alignment = 0, maxRows=0))", []),
                 ("PythUnity.String", "this is the type that stores data on how the text is displayed on the screen\nif you set the PythUnity.Object.rect.width then it will\nkeep the text from going past the width and will instead make new lines\nbut if the width is set to 0 or less, it will keep going as one line\nif the height is greater than 0 than it will scale the font size down to fit the height", [
@@ -118,6 +118,8 @@ def help():
             ("Decendants()", "this will get all the children of the object your running it on, \naswell as the children of those children and so on and so on", []), 
             ("SetClickGroup(new_click_group)", "this will set the clickGroup variable of all the objects that are a decendant of the object it was run on", [])]),
        ("Object Variables", "the Object class also comes with variables", [
+            ("rect", "a PythUnity.Rect describing the objects position relative to its parent", []),
+            ("globalRect", "a PythUnity.Rect describing the objects real position", []),
             ("children", "an array of all the children an Object has\nas a shortcut you can do PythUnity.Object[i] instead of PythUnity.Object.children[i]", []),
             ("destroyed", "says whether an Object is destroyed or not", []),
             ("parent", "returns the parent of the object, if the object doesnt have a parent it will return None", []),
@@ -145,7 +147,8 @@ def help():
                 ("RenderOptions Type, PythUnity.RenderOptions", "this is the class type of renderOptions", [
                     ("Variables", "all the variables", [
                         ("fitImage", "if True and the Object is a image it will fill the rect.width and rect.height of the object\nfor example:\n\n#This image will take up 500 by 500 pixels\nimgObj = PythUnity.Object(PythUnity.Rect(0, 0, 500, 500), PythUnity.image.load(\"image.jpg\"), fitImage=True)\n\n#In this image either the width or height of the image will be 500 pixels depending on which is bigger\nimgObj = PythUnity.Object(PythUnity.Rect(0, 0, 500, 500), PythUnity.image.load(\"image.jpg\"))\n", [])]),
-                        ("effect", "not implemented yet", [])])]),]),
+                        ("effect", "not implemented yet", [])])]),
+            ("enabled", "by default is set to True,\nif False object will not render or recieve button presses\nif True object will render and recieve button presses", []),]),
         ("Prefabs", "A prefab is a blueprint to create an object", [
             ("AddPrefab", "you can use PythUnity.AddPrefab(\"name\", part) \nto create a prefab from a part and store it at the name string\nheres an example: \npart = PythUnity.Object(PythUnity.Rect(0, 0, 100, 100), (255, 0, 0))\nPythUnity.AddPrefab(\"Square\", part)", []),
             ("GetPrefab", "you can use PythUnity.GetPrefab(\"name\") \nto create a part from a prefab that is stored at the name string\nheres an example: \npart = PythUnity.GetPrefab(\"Square\")", [])]),

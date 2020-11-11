@@ -95,3 +95,6 @@ class Var:
 ###
 global var
 var = Var()
+
+global updates
+updates = []

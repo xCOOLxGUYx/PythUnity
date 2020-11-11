@@ -32,7 +32,7 @@ def init():
 
   #FUNCTIONS##################
   def Touching(rect, pos):
-    return rect.left+rect.width > pos[0] > rect.left and rect.top+rect.height > pos[1] > rect.top
+    return rect.left+rect.width >= pos[0] >= rect.left and rect.top+rect.height >= pos[1] >= rect.top
   ############################
   for i in Variables.var.starts:
     i()#run start
@@ -42,29 +42,77 @@ def init():
   mouseUp = ""
   global clicked
   clicked = []
-  #########################################
-  #MAIN FUNCTION###########################
-  def MainFunction(i, offset):
-    #SET RECT##############################
-    rect = i.rect.Copy()
-    rect.left = rect.left + offset[0]
-    rect.top = rect.top + offset[1]
-    if(not(i.image is None) or not(i.text is None)):
-      screen.blit(i.transformedImage, rect.ToPygameRect())
-    elif(not(i.color is None)):
-      if(i.color[3] == 255):
-        pygame.draw.rect(screen, i.color, rect.ToPygameRect())
-      else:
-        s = pygame.Surface((rect.width, rect.height))
-        s.set_alpha(i.color[3])
-        s.fill((i.color[0], i.color[1], i.color[2]))
-        screen.blit(s, (rect.left, rect.top))
-    ########################################
-    #GET BUTTON PRESSES#####################
+  def GetRect(i):
+    rect = i.globalRect.Copy()
+    if(i.text != None or i.image != None):
+      rect.width = i.transformedImage.get_size()[0]
+      rect.height = i.transformedImage.get_size()[1]
+    return rect
+  #GetUpdates###########################
+  def Overlaps(rect1, rect2): 
+    if(rect1.left >= rect2.left+rect2.width or rect2.left >= rect1.left+rect1.width): 
+      return False
+    if(rect1.top >= rect2.top+rect2.height or rect2.top >= rect1.top+rect1.height): 
+      return False
+    return True
+  def Envelops(rect1, rect2):
+    return (rect1.left <= rect2.left and rect1.left+rect1.width >= rect2.left+rect2.width) and (rect1.top <= rect2.top and rect1.top+rect1.height >= rect2.top+rect2.height)
+  def GetUpdates(i):
+    rect = GetRect(i)
+    oldPos = i._Object__oldPos
+    if(i._Object__edited):
+      newPos = (rect.left, rect.top, rect.width, rect.height)
+      def TupleToRect(input):
+        return pygame.Rect(input[0], input[1], input[2], input[3])
+      Variables.updates.append(TupleToRect(oldPos))
+      Variables.updates.append(TupleToRect(newPos))
+      i._Object__oldPos = newPos
+      i._Object__edited = False
+    for iChild in i.children:
+      GetUpdates(iChild)
+  def UpdateAble(obj):
+    rect = GetRect(obj)
+    shown = False
+    transparent = False
+    if(obj.text != None or obj.image != None):
+      transparent = True
+    elif(obj.color == None or obj.color[3] != 255):
+      transparent = True
+    for i in range(len(newUpdates)-1, -1, -1):
+      curRect = Variables.updates[newUpdates[i]]
+      if(Overlaps(rect, curRect)):
+        shown = True
+        if(transparent):
+          break
+        elif(Envelops(rect, curRect)):
+          del newUpdates[i]
+    return shown
+  #Get Available###########################
+  def GetAvailable(i):
+    for iChild in range(len(i.children)-1, -1, -1):
+      GetAvailable(i.children[iChild])
+    if(UpdateAble(i)):# or i._Object__edited
+      available.insert(0, i)
+  def RenderFunction(i):
+    rect = GetRect(i)
+    if(i.enabled):
+        if(i.image != None or i.text != None):
+          screen.blit(i.transformedImage, rect.ToPygameRect())
+        elif(i.color != None):
+          if(i.color[3] == 255):
+            pygame.draw.rect(screen, i.color, rect.ToPygameRect())
+          else:
+            s = pygame.Surface((rect.width, rect.height))
+            s.set_alpha(i.color[3])
+            s.fill((i.color[0], i.color[1], i.color[2]))
+            screen.blit(s, (rect.left, rect.top))
+  #Get clicks and use velocity###########################
+  def ButtonFunction(i):
+    rect = GetRect(i)
     hovering = Touching(rect, Variables.var.mousePosition)
     global clicked
     type = []
-    if(i.button != None):
+    if(i.button != None and i.enabled):
       touching = mousePressed[0] and hovering
       if(touching):
         type = [0]
@@ -87,9 +135,10 @@ def init():
       clicked.insert(0, (i, type))
     ########################################
     for iChild in i.children:
-      MainFunction(iChild, (rect.left, rect.top))
-    i.rect.left = i.rect.left + i.velocity[0] * Variables.var.deltaTime
-    i.rect.top = i.rect.top + i.velocity[1] * Variables.var.deltaTime
+      ButtonFunction(iChild)
+    if(i.velocity[0] != 0 and i.velocity[1] != 0):
+      i.rect.left = i.rect.left + i.velocity[0] * Variables.var.deltaTime
+      i.rect.top = i.rect.top + i.velocity[1] * Variables.var.deltaTime
     ########################################
 #########################################
   def Update(i):
@@ -103,7 +152,11 @@ def init():
           Update(iChild)
   global nextFrameKeys
   keys = Variables.var.keys
+  screen.fill(Variables.var.backgroundColor)
+  pygame.display.flip()
+  pygame.event.set_allowed([pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN, pygame.KEYUP, pygame.MOUSEMOTION])
   while True:
+    available = []
     startTime = datetime.now()#Set Start Time
     #GetMousePos##############################
     mousePressed = (False, "")
@@ -163,13 +216,19 @@ def init():
     screen.fill(Variables.var.backgroundColor)
     clicked = []
     for i in Variables.var.parts:
-      MainFunction(i, (0, 0))
+      GetUpdates(i)
+    newUpdates = list(range(len(Variables.updates)))
+    for i in range(len(Variables.var.parts)-1, -1, -1):
+      GetAvailable(Variables.var.parts[i])
+    for i in available:
+      RenderFunction(i)
+    for i in Variables.var.parts:
+      ButtonFunction(i)
     #RUN BUTTON PRESSES#####################
     group = None
     blocked = False
     for i in clicked:
       if(not i[0].destroyed):
-        #print(i[0].index)
         if((group == None or group == i[0].clickGroup) and not blocked):
           group = i[0].clickGroup
           for type in i[1]:
@@ -217,8 +276,10 @@ def init():
                 if(i[0].button.onHoverOff != None):
                   i[0].button.onHoverOff(i[0], "Blocked")
     ########################################
+    pygame.display.update(Variables.updates)
+    #pygame.display.flip()
+    Variables.updates = []
     for i in Variables.var.parts:
       Update(i)
     Variables.var._Var__deltaTime = (datetime.now()-startTime).total_seconds()#Set DeltaTime
-    pygame.display.flip()
   #################
