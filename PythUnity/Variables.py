@@ -15,6 +15,7 @@ class Var:
         self.__oldMousePosition = (0, 0)
         self.__screenRect = (800, 600)
         self.__mouseDragging = False
+        self.__PreRender = None
         self.icon = pygame.transform.scale(pygame.image.load(os.path.dirname(__file__) + "/Assets/Icon.jpg"), (32, 32))
         self.appName = "PythUnity window"
         self.keys = {}
@@ -92,6 +93,13 @@ class Var:
     def screenRect(self, value):
       TypeCheck(value, tuple, "", "screenRect")
       self.__screenRect = value
+    @property
+    def PreRender(self):
+      return self.__PreRender
+    @PreRender.setter
+    def PreRender(self, value):
+      TypeCheck(value, [type(self.__init__), type(TypeCheck), type(None)], "PreRender", "v.")
+      self.__PreRender = value
 ###
 global var
 var = Var()

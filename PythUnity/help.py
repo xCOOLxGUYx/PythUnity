@@ -165,7 +165,9 @@ def help():
             ("mouseDragging", "a bool saying whether or not the mouse is being held down", []),
             ("icon", "a PythUnity.Surface that represents the icon on the top left of the window\nsetting it will change the window icon", []),
             ("appName", "a string that represents the text on the top left of the window\nsetting it will change the text", []),
-            ("keys", "a dictionary with they keyboard button names as the keys,\neach item in the dictionary has 3 values:\n\"Clicked\": was just pressed\n\"Held\": is being held\n\"Off\": was just released", [])]),
+            ("keys", "a dictionary with they keyboard button names as the keys,\neach item in the dictionary has 3 values:\n\"Clicked\": was just pressed\n\"Held\": is being held\n\"Off\": was just released", []),
+            ("PreRender", "a settable function that is run right before pygame.update()", []),
+            ("PythUnity.Variables.updates", "an array of pyame.rect \nused in pygame.update()\nUseful for using in the PreRender function", [])]),
         ("ProtectedList", "the type used in Object.children, Object.components, and String.rows\n\nits like a normal array but it will throw an error if you append, insert, or delete an item from a list \nif the list prohibits it\n\nNote: indexing, looping, and getting the length is the same as a normal array", [
             ("Methods", "", [
                 ("append", "same as array.append but will throw error if your not allowed to append", []),

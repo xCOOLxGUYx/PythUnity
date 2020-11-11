@@ -277,6 +277,8 @@ def init():
                 if(i[0].button.onHoverOff != None):
                   i[0].button.onHoverOff(i[0], "Blocked")
     ########################################
+    if(Variables.var.PreRender != None):
+      Variables.var.PreRender()
     pygame.display.update(Variables.updates)
     #pygame.display.flip()
     Variables.updates = []
