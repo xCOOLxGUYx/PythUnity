@@ -71,6 +71,8 @@ def init():
     for iChild in i.children:
       GetUpdates(iChild)
   def UpdateAble(obj):
+    if(not obj.enabled):
+      return False
     rect = GetRect(obj)
     shown = False
     transparent = False
@@ -95,17 +97,16 @@ def init():
       available.insert(0, i)
   def RenderFunction(i):
     rect = GetRect(i)
-    if(i.enabled):
-        if(i.image != None or i.text != None):
-          screen.blit(i.transformedImage, rect.ToPygameRect())
-        elif(i.color != None):
-          if(i.color[3] == 255):
-            pygame.draw.rect(screen, i.color, rect.ToPygameRect())
-          else:
-            s = pygame.Surface((rect.width, rect.height))
-            s.set_alpha(i.color[3])
-            s.fill((i.color[0], i.color[1], i.color[2]))
-            screen.blit(s, (rect.left, rect.top))
+    if(i.image != None or i.text != None):
+      screen.blit(i.transformedImage, rect.ToPygameRect())
+    elif(i.color != None):
+      if(i.color[3] == 255):
+        pygame.draw.rect(screen, i.color, rect.ToPygameRect())
+      else:
+        s = pygame.Surface((rect.width, rect.height))
+        s.set_alpha(i.color[3])
+        s.fill((i.color[0], i.color[1], i.color[2]))
+        screen.blit(s, (rect.left, rect.top))
   #Get clicks and use velocity###########################
   def ButtonFunction(i):
     rect = GetRect(i)

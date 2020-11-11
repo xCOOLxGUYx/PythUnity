@@ -116,7 +116,8 @@ def help():
             ("AddComp(comp)", "this will add a component,\na component is like a script, just like Unity it has a Start(), and Update() function\nan example you can run is:\nrandObj = PythUnity.Object(PythUnity.Rect(500, 500, 750, 300), (255, 0, 0))\ndef Banana(self):\n   print(\"banana start\")\ndef Apple(self):\n   print(\"apple update\")\nrandObj.AddComp((Banana, Apple))", []),
             ("DelComp(index)", "this will remove a component from the component list at an index,\nfor example if we took the example from AddComp and then ran: \nrandObj.DelComp(0)\nit wouldve removed the component we just added", []),
             ("Decendants()", "this will get all the children of the object your running it on, \naswell as the children of those children and so on and so on", []), 
-            ("SetClickGroup(new_click_group)", "this will set the clickGroup variable of all the objects that are a decendant of the object it was run on", [])]),
+            ("SetClickGroup(new_click_group)", "this will set the clickGroup variable of all the objects that are a decendant of the object it was run on", []),
+            ("SetEnabled(value)", "this will set the enabled variable of all the objects that are a decendant of the object it was run on", [])]),
        ("Object Variables", "the Object class also comes with variables", [
             ("rect", "a PythUnity.Rect describing the objects position relative to its parent", []),
             ("globalRect", "a PythUnity.Rect describing the objects real position", []),

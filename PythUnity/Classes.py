@@ -262,6 +262,10 @@ class Object:
     else:
       children = Variables.var.parts
     return children
+  def SetEnabled(self, value):
+    self.enabled = value
+    for i in self.Decendants():
+      i.enabled = value
   def Copy(self):
     self.__Throw("Object.Copy")
     oldParent = self.parent
