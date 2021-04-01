@@ -61,3 +61,10 @@ def Err(text):
 def Warn(text):
     raise RuntimeWarning("PythUnity: " + text)
 
+
+def GetRect(i):
+  rect = i.globalRect.Copy()
+  if(i.text != None or i.image != None):
+    rect.width = i.transformedImage.get_size()[0]
+    rect.height = i.transformedImage.get_size()[1]
+  return rect

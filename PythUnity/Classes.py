@@ -59,7 +59,7 @@ class Object:
       return self.__rect
   @rect.setter
   def rect(self, value):
-    self.__edited = True
+    SetObjEdited(self)
     Functions.TypeCheck(value, Rect, "rect")
     self.__rect = value
     self.__rect._Rect__owner = self
@@ -81,7 +81,7 @@ class Object:
       return self.__globalRect
   @globalRect.setter
   def globalRect(self, value):
-    self.__edited = True
+    SetObjEdited(self)
     Functions.TypeCheck(value, Rect, "globalRect")
     self.__globalRect = value
     self.__globalRect._Rect__owner = self
@@ -225,7 +225,7 @@ class Object:
     return indexes
   def Move(self, newIndex):#components can have their update function skipped on accident if ran in another comp.update
     self.__Throw("Object.Move")
-    self.__edited = True
+    SetObjEdited(self)
     children = self.GetParentChildren()
     if(newIndex < 0):
         Functions.Err("Object.Move failed, index less than 0")
@@ -246,7 +246,7 @@ class Object:
         i = i - 1
   def SetParent(self, newParent):
     self.__Throw("Object.SetParent")
-    self.__edited = True
+    SetObjEdited(self)
     self.__updateGlobal = True
     children = self.GetParentChildren()
     self.Move(len(children))#make it so other children have their indexes fixed
@@ -286,7 +286,7 @@ class Object:
     return copied
   def Destroy(self):
     self.__Throw("Object.Destroy")
-    Variables.updates.append(self.globalRect.ToPygameRect())
+    Variables.updates.append(pygame.Rect(self.__oldPos[0], self.__oldPos[1], self.__oldPos[2], self.__oldPos[3]))
     children = self.GetParentChildren()
     self.Move(len(children))
     del children._ProtectedList__val[self.index]
@@ -414,7 +414,7 @@ class Button:
       TestFuncLen(value, "onHoverOn")
       self.__onHoverOn = value
 class String:
-  def __init__(self, text, fontSize, font, fontColor, backgroundColor, alignment = 0, maxRows = 0):
+  def __init__(self, text, fontSize, font, fontColor, backgroundColor, alignment = 0, maxRows = 0, addDash = True):
     self.__owner = None
     self.__fontSize = None
     self.__imageChanged = False
@@ -422,8 +422,10 @@ class String:
     self.__font = None
     self.__fontColor = None
     self.__backgroundColor = None
+    self.__addDash = None
     self.__rows = ProtectedList("rows", "String", False, False, False, False, (StringFixRow, self))
     self.__maxRows = 0
+    self.addDash = addDash
     self.alignment = alignment
     self.fontSize = fontSize
     self.font = font
@@ -445,6 +447,14 @@ class String:
   def maxRows(self, value):
     Functions.TypeCheck(value, int, "maxRows", "String")
     self.__maxRows = value
+    self.__rowChanged = True
+  @property
+  def addDash(self):
+    return self.__addDash
+  @addDash.setter
+  def addDash(self, value):
+    Functions.TypeCheck(value, bool, "addDash", "String")
+    self.__addDash = value
     self.__rowChanged = True
   @property
   def rows(self):
@@ -745,7 +755,7 @@ def StringResize(self, resetSize = True):
           while(sizer.size(rows[i])[0] > self._String__owner.rect.width and rows[i][-1] != " "):
             newRow = rows[i][-1] + newRow
             rows[i] = rows[i][:-1]
-          if(rows[i][-1] != " "):
+          if(rows[i][-1] != " " and self.addDash):
             newRow = rows[i][-1] + newRow
             rows[i] = rows[i][:-1] + "-"
         size = sizer.size(rows[i])[0]
@@ -823,4 +833,10 @@ def SetEdited(self):
   else:
     owner = self._String__owner
   if(owner != None):
-    owner._Object__edited = True
+    SetObjEdited(owner)
+
+def SetObjEdited(self):
+    self._Object__edited = True
+    for i in self.Decendants():
+        i._Object__edited = True
+      

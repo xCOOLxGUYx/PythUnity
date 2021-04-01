@@ -14,7 +14,7 @@ from pygame import Surface
 from pygame import font
 v = Variables.var
 
-del Variables
+#del Variables
 __load = image.load
 def __im(fileDest, colorKey=None): 
   errMessage = "in PythUnity.image.load(\"Image.png\", colorKey) "

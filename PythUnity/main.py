@@ -4,6 +4,7 @@ from PythUnity import Classes
 from PythUnity import Variables
 from PythUnity import Functions
 from datetime import datetime
+from PythUnity.Functions import GetRect
 global nextFrameKeys
 nextFrameKeys = {}
 
@@ -42,12 +43,6 @@ def init():
   mouseUp = ""
   global clicked
   clicked = []
-  def GetRect(i):
-    rect = i.globalRect.Copy()
-    if(i.text != None or i.image != None):
-      rect.width = i.transformedImage.get_size()[0]
-      rect.height = i.transformedImage.get_size()[1]
-    return rect
   #GetUpdates###########################
   def Overlaps(rect1, rect2): 
     if(rect1.left >= rect2.left+rect2.width or rect2.left >= rect1.left+rect1.width): 
@@ -225,6 +220,12 @@ def init():
       RenderFunction(i)
     for i in Variables.var.parts:
       ButtonFunction(i)
+    ##########################################
+    if(Variables.var.PreRender != None):
+      Variables.var.PreRender()
+    pygame.display.update(Variables.updates)
+    #pygame.display.flip()
+    Variables.updates = []
     #RUN BUTTON PRESSES#####################
     group = None
     blocked = False
@@ -277,11 +278,6 @@ def init():
                 if(i[0].button.onHoverOff != None):
                   i[0].button.onHoverOff(i[0], "Blocked")
     ########################################
-    if(Variables.var.PreRender != None):
-      Variables.var.PreRender()
-    pygame.display.update(Variables.updates)
-    #pygame.display.flip()
-    Variables.updates = []
     for i in Variables.var.parts:
       Update(i)
     Variables.var._Var__deltaTime = (datetime.now()-startTime).total_seconds()#Set DeltaTime
